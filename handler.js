@@ -46,7 +46,8 @@ export async function messageHandler(sock, msg) {
     if (msg.key.fromMe) return;
 
     // --- AFK LOGIC LISTENER ---
-    const sender = msg.key.participant || msg.key.remoteJid;
+    let rawSender = msg.key.participant || msg.key.remoteJid;
+    const sender = rawSender.includes(':') ? rawSender.split(':')[0] + '@s.whatsapp.net' : rawSender;
     
     // 1. If sender was AFK and sends a message, remove their AFK status
     if (afkUsers.has(sender)) {
@@ -57,8 +58,12 @@ export async function messageHandler(sock, msg) {
     }
 
     // 1b. If the Owner sends a message to the bot, remove the BOT's AFK status as well
-    const botId = sock.user.id.split(':')[0] + '@s.whatsapp.net';
-    if (sender === config.ownerNumber && afkUsers.has(botId)) {
+    const botId = sock.user.id.includes(':') ? sock.user.id.split(':')[0] + '@s.whatsapp.net' : sock.user.id;
+    
+    let configOwner = config.ownerNumber;
+    if (configOwner.includes(':')) configOwner = configOwner.split(':')[0] + '@s.whatsapp.net';
+
+    if (sender === configOwner && afkUsers.has(botId)) {
         const data = afkUsers.get(botId);
         const duration = Math.round((Date.now() - data.time) / 1000);
         afkUsers.delete(botId);
@@ -74,8 +79,8 @@ export async function messageHandler(sock, msg) {
     // If it's a private chat, the message is implicitly directed at the bot/owner
     const isGroup = msg.key.remoteJid.endsWith('@g.us');
     if (!isGroup) {
-        const botId = sock.user.id.split(':')[0] + '@s.whatsapp.net';
-        if (!targets.includes(botId)) targets.push(botId);
+        const botTarget = sock.user.id.includes(':') ? sock.user.id.split(':')[0] + '@s.whatsapp.net' : sock.user.id;
+        if (!targets.includes(botTarget)) targets.push(botTarget);
     }
 
     for (const target of targets) {
