@@ -3,6 +3,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import config from './config.js';
 import { extractMessageText } from './utils/helper.js';
+import { afkUsers } from './utils/afkData.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -42,6 +43,31 @@ export async function loadCommands() {
 export async function messageHandler(sock, msg) {
     // Prevent processing messages from the bot itself
     if (msg.key.fromMe) return;
+
+    // --- AFK LOGIC LISTENER ---
+    const sender = msg.key.participant || msg.key.remoteJid;
+    
+    // 1. If sender was AFK and sends a message, remove their AFK status
+    if (afkUsers.has(sender)) {
+        const data = afkUsers.get(sender);
+        const duration = Math.round((Date.now() - data.time) / 1000); // in seconds
+        afkUsers.delete(sender);
+        await sock.sendMessage(msg.key.remoteJid, { text: `👋 Selamat datang kembali! Mode AFK kamu telah dimatikan.\n(AFK selama ${duration} detik).` }, { quoted: msg });
+    }
+
+    // 2. Check if sender mentioned or replied to an AFK user
+    const mentionedJids = msg.message?.extendedTextMessage?.contextInfo?.mentionedJid || [];
+    const quotedJid = msg.message?.extendedTextMessage?.contextInfo?.participant;
+    const targets = [...mentionedJids];
+    if (quotedJid) targets.push(quotedJid);
+
+    for (const target of targets) {
+        if (afkUsers.has(target)) {
+            const data = afkUsers.get(target);
+            await sock.sendMessage(msg.key.remoteJid, { text: `💤 Ssst, orang yang kamu tag sedang AFK!\n\n*Alasan:* ${data.reason}` }, { quoted: msg });
+        }
+    }
+    // --- END AFK LOGIC ---
 
     const messageText = extractMessageText(msg);
     if (!messageText.startsWith(config.prefix)) return;
