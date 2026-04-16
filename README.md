@@ -2,11 +2,14 @@
 
 A lightweight, efficient, and highly maintainable WhatsApp bot built using [@whiskeysockets/baileys](https://github.com/WhiskeySockets/Baileys). This bot utilizes a robust **Command Handler Architecture**, allowing you to easily add new commands without creating spaghetti code. Session storage uses local flat-files, completely eliminating the need for complex external databases.
 
-## 🚀 Features
+## 🚀 Features & Built-in Modules
+- **🤖 Groq AI Assistant (`!ai`)**: Integrated Chatbot using LLaMA3 (via `groq-sdk`).
+- **✂️ Auto Sticker Maker (`!sticker`)**: Convert images/videos into WebP stickers using dynamically pulled FFMPEG.
+- **📥 TikTok Downloader (`!tiktok`)**: Download videos without watermark.
+- **👮 Group Admin Toolkit**: Includes `!kick`, `!promote`, `!demote`, and `!hidetag`.
 - **ES6 Module syntax** for modern Node.js standard practices.
 - **Zero Database Setup**: Uses Baileys `useMultiFileAuthState` for local session caching.
 - **Dynamic Command Loading**: Add a `.js` file into the `commands` folder, and it automatically registers.
-- **Event-Driven Architecture**: Native reconnection logic and terminal QR code authentication.
 
 ## 📋 Prerequisites
 - Node.js (v16+)
@@ -19,15 +22,16 @@ A lightweight, efficient, and highly maintainable WhatsApp bot built using [@whi
    git clone https://github.com/itswill00/Whatsapp_bot.git
    cd Whatsapp_bot
    ```
-2. Install dependencies:
+2. Install dependencies (This might take a minute as it downloads FFMPEG binaries automatically):
    ```bash
    npm install
    ```
-3. Start the bot:
+3. **Configure APIs**: Open `config.js` and insert your Groq API Key (`groqApiKey: '...'`). You can get one for free at [console.groq.com](https://console.groq.com).
+4. Start the bot:
    ```bash
    npm start
    ```
-4. **Scan the QR Code**: The terminal will display a QR code. Open WhatsApp > Linked Devices > Link a Device, and scan the QR code to authenticate. Your session will automatically be saved in the `auth_info_baileys` folder so you don't need to re-scan on restart.
+5. **Scan the QR Code**: The terminal will display a QR code. Open WhatsApp > Linked Devices > Link a Device, and scan the QR code to authenticate. Your session will automatically be saved in the `auth_info_baileys` folder so you don't need to re-scan on restart.
 
 ---
 
