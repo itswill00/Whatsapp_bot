@@ -4,6 +4,7 @@ import { fileURLToPath } from 'url';
 import config from './config.js';
 import { extractMessageText } from './utils/helper.js';
 import { afkUsers } from './utils/afkData.js';
+import { downloadMediaMessage } from '@whiskeysockets/baileys';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -84,6 +85,33 @@ export async function messageHandler(sock, msg) {
         }
     }
     // --- END AFK LOGIC ---
+
+    // --- ANTI VIEW-ONCE LOGIC ---
+    let messageType = Object.keys(msg.message || {})[0];
+    if (messageType === 'viewOnceMessage' || messageType === 'viewOnceMessageV2' || messageType === 'viewOnceMessageV2Extension') {
+        try {
+            const innerMsg = msg.message[messageType].message;
+            const mediaType = Object.keys(innerMsg)[0]; // imageMessage or videoMessage
+            
+            // Mock the message envelope so Baileys can download it
+            const mockMsg = {
+                key: msg.key,
+                message: innerMsg
+            };
+            
+            const buffer = await downloadMediaMessage(mockMsg, 'buffer', {}, { logger: console });
+            const caption = "👁️‍🗨️ `[Anti-ViewOnce Detected]`\n\n_Bot berhasil mencegat dan menyimpan file rahasia 1-kali-lihat ini._";
+            
+            if (mediaType === 'imageMessage') {
+                await sock.sendMessage(msg.key.remoteJid, { image: buffer, caption: caption }, { quoted: msg });
+            } else if (mediaType === 'videoMessage') {
+                await sock.sendMessage(msg.key.remoteJid, { video: buffer, caption: caption }, { quoted: msg });
+            }
+        } catch (e) {
+            console.error("[Anti-ViewOnce] Failed to extract VO media:", e);
+        }
+    }
+    // --- END ANTI VIEW-ONCE ---
 
     const messageText = extractMessageText(msg);
     if (!messageText.startsWith(config.prefix)) return;
