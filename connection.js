@@ -17,7 +17,8 @@ export async function startConnection() {
     const sock = makeWASocket({
         auth: state,
         logger,
-        printQRInTerminal: false // We will handle QR via events
+        printQRInTerminal: false, // We will handle QR via events
+        browser: ['Ubuntu', 'Chrome', '20.0.04']
     });
 
     // Handle connection updates
@@ -30,11 +31,13 @@ export async function startConnection() {
         }
 
         if (connection === 'close') {
-            const shouldReconnect = lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut;
-            console.log('[Connection] Connection closed. Reconnecting:', shouldReconnect);
+            const statusCode = lastDisconnect?.error?.output?.statusCode;
+            const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
+            
+            console.log(`[Connection] Connection closed (Reason: ${statusCode}). Reconnecting:`, shouldReconnect);
             
             if (shouldReconnect) {
-                startConnection();
+                setTimeout(() => startConnection(), 3000); // 3 second delay to avoid looping
             } else {
                 console.log('[Connection] Logged out. Delete auth_info_baileys and restart to login again.');
             }
