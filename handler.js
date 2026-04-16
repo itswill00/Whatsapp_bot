@@ -61,10 +61,17 @@ export async function messageHandler(sock, msg) {
     const targets = [...mentionedJids];
     if (quotedJid) targets.push(quotedJid);
 
+    // If it's a private chat, the message is implicitly directed at the bot/owner
+    const isGroup = msg.key.remoteJid.endsWith('@g.us');
+    if (!isGroup) {
+        const botId = sock.user.id.split(':')[0] + '@s.whatsapp.net';
+        if (!targets.includes(botId)) targets.push(botId);
+    }
+
     for (const target of targets) {
         if (afkUsers.has(target)) {
             const data = afkUsers.get(target);
-            await sock.sendMessage(msg.key.remoteJid, { text: `💤 Ssst, orang yang kamu tag sedang AFK!\n\n*Alasan:* ${data.reason}` }, { quoted: msg });
+            await sock.sendMessage(msg.key.remoteJid, { text: `💤 Ssst, orang yang kamu hubungi sedang AFK!\n\n*Alasan:* ${data.reason}` }, { quoted: msg });
         }
     }
     // --- END AFK LOGIC ---
