@@ -25,7 +25,7 @@ export default {
 
             const chatCompletion = await groq.chat.completions.create({
                 messages: [{ role: "user", content: prompt }],
-                model: "llama3-8b-8192", // Fast and free model
+                model: "llama-3.1-8b-instant", // New LLaMA-3.1 model because v3.0 was decommissioned
             });
 
             const reply = chatCompletion.choices[0]?.message?.content || "Maaf, AI tidak dapat merespon saat ini.";
