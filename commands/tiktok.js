@@ -26,8 +26,12 @@ export default {
                 return await sock.sendMessage(msg.key.remoteJid, { text: "❌ Gagal mengunduh. Pastikan video tidak di-private." }, { quoted: msg });
             }
 
-            const videoUrl = data.play;
-            const hdVideoUrl = data.hdplay || videoUrl; // Prefer HD if available
+            let videoUrl = data.play;
+            if (videoUrl.startsWith('/')) videoUrl = `https://www.tikwm.com${videoUrl}`;
+
+            let hdVideoUrl = data.hdplay || videoUrl; // Prefer HD if available
+            if (hdVideoUrl.startsWith('/')) hdVideoUrl = `https://www.tikwm.com${hdVideoUrl}`;
+            
             const caption = `📱 *TikTok Downloader*\n\n👤 *Akun:* ${data.author?.nickname || 'Unknown'}\n📝 *Deskripsi:* ${data.title || '-'}\n🎵 *Musik:* ${data.music_info?.title || '-'}\n\n_Auto-Downloaded by Bot_`;
 
             await sock.sendMessage(msg.key.remoteJid, { 
