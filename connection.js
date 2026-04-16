@@ -1,4 +1,4 @@
-import { makeWASocket, useMultiFileAuthState, DisconnectReason } from '@whiskeysockets/baileys';
+import { makeWASocket, useMultiFileAuthState, DisconnectReason, fetchLatestWaWebVersion } from '@whiskeysockets/baileys';
 import pino from 'pino';
 import qrcode from 'qrcode-terminal';
 import { messageHandler, loadCommands } from './handler.js';
@@ -13,8 +13,13 @@ export async function startConnection() {
     // Initialize auth state saving mechanisms
     const { state, saveCreds } = await useMultiFileAuthState('./auth_info_baileys');
 
+    // Fetch latest WA Web version to avoid 405 Error
+    const { version } = await fetchLatestWaWebVersion();
+    console.log(`[Connection] Using WA v${version.join('.')}`);
+
     // Create Socket connection
     const sock = makeWASocket({
+        version,
         auth: state,
         logger,
         printQRInTerminal: false, // We will handle QR via events
