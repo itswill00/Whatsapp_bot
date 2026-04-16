@@ -52,7 +52,16 @@ export async function messageHandler(sock, msg) {
         const data = afkUsers.get(sender);
         const duration = Math.round((Date.now() - data.time) / 1000); // in seconds
         afkUsers.delete(sender);
-        await sock.sendMessage(msg.key.remoteJid, { text: `👋 Selamat datang kembali! Mode AFK kamu telah dimatikan.\n(AFK selama ${duration} detik).` }, { quoted: msg });
+        await sock.sendMessage(msg.key.remoteJid, { text: `👋 Selamat datang kembali! Mode AFK dimatikan.\n(AFK selama ${duration} detik).` }, { quoted: msg });
+    }
+
+    // 1b. If the Owner sends a message to the bot, remove the BOT's AFK status as well
+    const botId = sock.user.id.split(':')[0] + '@s.whatsapp.net';
+    if (sender === config.ownerNumber && afkUsers.has(botId)) {
+        const data = afkUsers.get(botId);
+        const duration = Math.round((Date.now() - data.time) / 1000);
+        afkUsers.delete(botId);
+        await sock.sendMessage(msg.key.remoteJid, { text: `👋 Welcome back Bos! AFK Global Bot telah dimatikan.\n(Lama AFK: ${duration} detik).` }, { quoted: msg });
     }
 
     // 2. Check if sender mentioned or replied to an AFK user
