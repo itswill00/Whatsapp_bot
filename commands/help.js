@@ -8,8 +8,9 @@ export default {
 
         const categories = {
             "System":     ["restart", "update", "speedtest", "ping", "sysinfo"],
-            "AI & Media": ["ai", "summarize", "play", "tiktok", "ig", "yt", "twitter"],
-            "Utilitas":   ["afk", "sticker", "remindme"],
+            "AI & Vision":["ai", "ocr", "hd", "summarize"],
+            "Media DL":   ["play", "tiktok", "ig", "yt", "twitter"],
+            "Utilitas":   ["ssweb", "afk", "sticker", "remindme"],
             "Grup":       ["kick", "promote", "demote", "hidetag"]
         };
 
