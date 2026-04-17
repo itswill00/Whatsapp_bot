@@ -4,7 +4,7 @@ import axios from 'axios';
 
 export default {
     name: "hd",
-    description: "Bersihkan dan tajamkan foto (AI Upscale). Balas pesan gambar dengan !hd",
+    description: "Pertajam foto buram (AI Upscale). Balas gambar dengan !hd",
     execute: async (sock, msg, args) => {
         const remoteJid = msg.key.remoteJid;
         const quoted = msg.message?.extendedTextMessage?.contextInfo?.quotedMessage || msg.message;
@@ -25,46 +25,70 @@ export default {
                 { logger: console }
             );
 
-            // Stage 2: Upload to Cloud
+            // Stage 2: Upload to Cloud (Multi-Uploader)
             const imageUrl = await uploadFile(buffer);
             console.log(`[HD] Image uploaded to: ${imageUrl}`);
 
-            // Stage 3: Process via Multiple Engines
+            // Stage 3: Multi-AI Engine Rotation (7 Engines)
             const engines = [
-                { name: "Vreden",  url: `https://api.vreden.web.id/api/remini?url=${encodeURIComponent(imageUrl)}` },
-                { name: "Widipe",  url: `https://widipe.com/remini?url=${encodeURIComponent(imageUrl)}` },
-                { name: "Siputzx", url: `https://api.siputzx.my.id/api/ai/remini?url=${encodeURIComponent(imageUrl)}` }
+                { name: "Engine-Alpha", url: `https://api.vreden.my.id/api/remini?url=${encodeURIComponent(imageUrl)}` },
+                { name: "Engine-Beta",  url: `https://api.agatz.xyz/api/remini?url=${encodeURIComponent(imageUrl)}` },
+                { name: "Engine-Gamma", url: `https://api.siputzx.my.id/api/ai/remini?url=${encodeURIComponent(imageUrl)}` },
+                { name: "Engine-Delta", url: `https://widipe.com/remini?url=${encodeURIComponent(imageUrl)}` },
+                { name: "Engine-Zeta",  url: `https://api.lolhuman.xyz/api/remini?apikey=64333e8746c37251145caaa2&img=${encodeURIComponent(imageUrl)}` },
+                { name: "Engine-Omega", url: `https://skizo.tech/api/remini?url=${encodeURIComponent(imageUrl)}&apikey=drshper` },
+                { name: "Engine-Sigma", url: `https://api.alyaserver.my.id/api/remini?url=${encodeURIComponent(imageUrl)}` }
             ];
 
-            let resultUrl = null;
-            let engineUsed = "";
+            let finalImage = null;
+            let usedEngine = "";
 
             for (const engine of engines) {
                 try {
-                    console.log(`[HD] Trying engine: ${engine.name}...`);
-                    // API ini biasanya langsung mengembalikan stream gambar atau JSON dengan url
-                    // Namun kebanyakan API publik di ekosistem ini langsung mengirim stream
-                    // Kita akan verifikasi apakah URL ini valid/bisa diakses
-                    const check = await axios.get(engine.url, { timeout: 30000, responseType: 'arraybuffer' });
-                    if (check.status === 200 && check.data.length > 5000) { // Valid image usually > 5KB
-                        resultUrl = engine.url;
-                        engineUsed = engine.name;
+                    console.log(`[HD] Invoking ${engine.name}...`);
+                    const res = await axios.get(engine.url, { 
+                        timeout: 45000, 
+                        responseType: 'arraybuffer',
+                        headers: {
+                            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+                        }
+                    });
+
+                    // Verifikasi apakah response adalah gambar yang valid
+                    const contentType = res.headers['content-type'];
+                    if (contentType && contentType.includes('image')) {
+                        finalImage = Buffer.from(res.data);
+                        usedEngine = engine.name;
                         break;
+                    } 
+                    
+                    // Cek jika response adalah JSON berisi URL (Beberapa API me-return JSON)
+                    if (contentType && contentType.includes('json')) {
+                        const json = JSON.parse(res.data.toString());
+                        const nestedUrl = json.url || json.result || (json.data && json.data.url);
+                        if (nestedUrl) {
+                            const imgRes = await axios.get(nestedUrl, { timeout: 30000, responseType: 'arraybuffer' });
+                            finalImage = Buffer.from(imgRes.data);
+                            usedEngine = engine.name;
+                            break;
+                        }
                     }
                 } catch (e) {
-                    console.error(`[HD] Engine ${engine.name} failed:`, e.message);
+                    console.error(`[HD] ${engine.name} Error: ${e.message}`);
                 }
             }
 
-            if (!resultUrl) throw new Error("Semua mesin AI sedang sibuk atau gagal memproses gambar ini.");
+            if (!finalImage) {
+                throw new Error("Sistem AI sedang bermasalah di semua server komunitas (404/Timeout).");
+            }
 
             await sock.sendMessage(remoteJid, { 
-                image: { url: resultUrl }, 
-                caption: `*AI Image Enhancer*\n_Berhasil ditajamkan via ${engineUsed}_` 
+                image: finalImage, 
+                caption: `*AI Image Enhancer*\n_Berhasil diproses via ${usedEngine}_` 
             }, { quoted: msg });
 
         } catch (error) {
-            console.error("[HD Error]:", error.message);
+            console.error("[HD Final Error]:", error.message);
             sock.sendMessage(remoteJid, { text: `❌ Gagal memproses gambar.\n_Details: ${error.message}_` }, { quoted: msg });
         }
     }
