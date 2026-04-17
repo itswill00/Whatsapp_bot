@@ -124,9 +124,6 @@ export async function messageHandler(sock, msg) {
     }
     // --- END ANTI VIEW-ONCE ---
 
-    const messageText = extractMessageText(msg);
-    if (!messageText) return;
-
     // --- LOG MESSAGE FOR SUMMARIZER ---
     // Only log if it's a group and NOT a command
     if (isGroup && !messageText.startsWith(config.prefix)) {
