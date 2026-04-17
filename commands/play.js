@@ -39,9 +39,12 @@ export default {
             const filePath = path.join(tempDir, fileName);
 
             // 3. Eksekusi yt-dlp secara lokal
-            // Penyamaran Elit: Pura-pura jadi HP Android/iOS untuk menipu bot-detection YouTube
-            const userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36";
-            const ytDlpCommand = `yt-dlp -x --audio-format mp3 --audio-quality 0 --no-check-certificates --user-agent "${userAgent}" --extractor-args "youtube:player-client=android,ios" "${video.url}" -o "${filePath}"`;
+            // Deep Bypass: Menggunakan kombinasi client iOS, Android, dan Embedded untuk menembus proteksi VPS.
+            const userAgent = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Mobile/15E148 Safari/604.1";
+            const cookiesPath = path.join(__dirname, '../data/cookies.txt');
+            const cookieFlag = fs.existsSync(cookiesPath) ? `--cookies "${cookiesPath}"` : '';
+            
+            const ytDlpCommand = `yt-dlp -x --audio-format mp3 --audio-quality 0 --no-check-certificates --force-ipv4 --geo-bypass --user-agent "${userAgent}" ${cookieFlag} --extractor-args "youtube:player-client=ios,android,web_embedded,tv_embedded" "${video.url}" -o "${filePath}"`;
 
             exec(ytDlpCommand, async (error, stdout, stderr) => {
                 if (error) {
