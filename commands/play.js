@@ -39,8 +39,9 @@ export default {
             const filePath = path.join(tempDir, fileName);
 
             // 3. Eksekusi yt-dlp secara lokal
-            // Kita hapus --ffmpeg-location karena sudah pakai versi system (apt install)
-            const ytDlpCommand = `yt-dlp -x --audio-format mp3 --audio-quality 0 "${video.url}" -o "${filePath}"`;
+            // Penyamaran Elit: Pura-pura jadi HP Android/iOS untuk menipu bot-detection YouTube
+            const userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36";
+            const ytDlpCommand = `yt-dlp -x --audio-format mp3 --audio-quality 0 --no-check-certificates --user-agent "${userAgent}" --extractor-args "youtube:player-client=android,ios" "${video.url}" -o "${filePath}"`;
 
             exec(ytDlpCommand, async (error, stdout, stderr) => {
                 if (error) {
