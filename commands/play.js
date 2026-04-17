@@ -1,79 +1,76 @@
 import yts from 'yt-search';
-import axios from 'axios';
+import { exec } from 'child_process';
+import path from 'path';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
+import ffmpegInstaller from '@ffmpeg-installer/ffmpeg';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export default {
     name: "play",
-    description: "Ciptakan mesin pencari dan pemutar lagu MP3 dari YouTube hanya dengan judul.",
+    description: "Pemutar musik YouTube premium menggunakan Local Downloader Engine (yt-dlp)",
     execute: async (sock, msg, args) => {
-        if (!args.length) return sock.sendMessage(msg.key.remoteJid, { text: "❌ Masukkan judul lagu yang ingin didengar! Contoh: *!play adele hello*" }, { quoted: msg });
-        
-        await sock.sendMessage(msg.key.remoteJid, { react: { text: "🔍", key: msg.key } });
+        if (!args.length) return sock.sendMessage(msg.key.remoteJid, { text: "❌ Masukkan judul lagu! Contoh: *!play lathi*" }, { quoted: msg });
+
         const query = args.join(" ");
+        await sock.sendMessage(msg.key.remoteJid, { react: { text: "🔍", key: msg.key } });
 
         try {
-            // 1. Scraping data via yt-search
+            // 1. Cari video di YouTube
             const searchResults = await yts(query);
-            const videos = searchResults.videos;
-            if (!videos.length) return sock.sendMessage(msg.key.remoteJid, { text: "❌ Tidak menemukan lagu tersebut di YouTube." }, { quoted: msg });
-            
-            const video = videos[0];
-            const caption = `🎵 *YOUTUBE AUDIO PLAYER*\n\n📌 *Judul:* ${video.title}\n⏱️ *Durasi:* ${video.timestamp}\n👀 *Views:* ${video.views}\n🔗 *Channel:* ${video.author.name}\n\n_⏳ Mesin sedang menarik MP3 dari server, mohon dimaklumi apabila memakan waktu beberapa detik..._`;
-            
-            // 2. Berikan notifikasi awal kepada user (berupa thumbnail & Info)
+            const video = searchResults.videos[0];
+            if (!video) return sock.sendMessage(msg.key.remoteJid, { text: "❌ Lagu tidak ditemukan." }, { quoted: msg });
+
+            // Batasi durasi agar tidak membebani server (Max 10 Menit)
+            if (video.seconds > 600) {
+                return sock.sendMessage(msg.key.remoteJid, { text: "❌ Durasi terlalu panjang! Maksimal 10 menit agar server tetap stabil." }, { quoted: msg });
+            }
+
+            const caption = `🎵 *YT-DLP LOCAL ENGINE* 🎵\n\n📌 *Judul:* ${video.title}\n⏱️ *Durasi:* ${video.timestamp}\n🔗 *Link:* ${video.url}\n\n_⏳ Sedang mengunduh & mengonversi via VPS Engine..._`;
             await sock.sendMessage(msg.key.remoteJid, { image: { url: video.thumbnail }, caption: caption }, { quoted: msg });
-            
-            // 3. Tarik MP3 menggunakan Multi-API Fallback System
-            const youtubeUrl = video.url;
-            const apiSources = [
-                {
-                    url: `https://api.vreden.web.id/api/ytmp3?url=${encodeURIComponent(youtubeUrl)}`,
-                    parser: (data) => data?.result?.download?.url || data?.result?.download
-                },
-                {
-                    url: `https://aemt.me/youtube?url=${encodeURIComponent(youtubeUrl)}&filter=audioandvideo`,
-                    parser: (data) => data?.url
-                },
-                {
-                    url: `https://api.siputzx.my.id/api/d/ytmp3?url=${encodeURIComponent(youtubeUrl)}`,
-                    parser: (data) => data?.data?.dl || data?.data?.url
-                },
-                {
-                    url: `https://api.tiklydown.eu.org/api/download/ytmp3?url=${encodeURIComponent(youtubeUrl)}`,
-                    parser: (data) => data?.url || data?.result?.url
-                }
-            ];
 
-            let audioUrl = null;
+            // 2. Persiapkan Folder Temp
+            const tempDir = path.join(__dirname, '../temp');
+            if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir, { recursive: true });
             
-            // Loop through each API until one returns a valid audio URL
-            for (const source of apiSources) {
-                try {
-                    const res = await axios.get(source.url, { timeout: 10000 }).catch(() => null);
-                    if (res && res.data) {
-                        const parsedUrl = source.parser(res.data);
-                        if (parsedUrl) {
-                            audioUrl = parsedUrl;
-                            break; // Stop immediately if we found a working link
-                        }
+            const fileName = `audio_${Date.now()}.mp3`;
+            const filePath = path.join(tempDir, fileName);
+
+            // 3. Eksekusi yt-dlp secara lokal
+            // --ffmpeg-location menggunakan path dari installer npm kita
+            const ytDlpCommand = `yt-dlp -x --audio-format mp3 --audio-quality 0 --ffmpeg-location "${ffmpegInstaller.path}" "${video.url}" -o "${filePath}"`;
+
+            exec(ytDlpCommand, async (error, stdout, stderr) => {
+                if (error) {
+                    console.error("[yt-dlp Error]:", error);
+                    // Cek jika error dikarenakan yt-dlp belum terinstall di VPS
+                    if (error.message.includes('not found')) {
+                        return sock.sendMessage(msg.key.remoteJid, { text: "❌ *Error Teknis:* yt-dlp belum terpasang di VPS. Harap hubungi owner untuk menjalankan perintah instalasi di terminal SSH." }, { quoted: msg });
                     }
-                } catch (err) {
-                    console.error("[API Fallback Error]:", err.message);
+                    return sock.sendMessage(msg.key.remoteJid, { text: "❌ Gagal memproses audio. Pastikan link YouTube valid atau coba lagi nanti." }, { quoted: msg });
                 }
-            }
 
-            if (!audioUrl) {
-                return sock.sendMessage(msg.key.remoteJid, { text: "❌ Semua server pengunduh sedang sibuk. Silakan coba lagi beberapa saat lagi atau gunakan judul lagu lain." }, { quoted: msg });
-            }
-
-            await sock.sendMessage(msg.key.remoteJid, { 
-                audio: { url: audioUrl }, 
-                mimetype: 'audio/mp4', // Mimetype universal agar bisa diplay di dalam WA
-                ptt: false // Jadikan true jika ingin wujudnya Voice Note bulat (bukan dokumen lagu)
-            }, { quoted: msg });
+                // 4. Kirim Audio ke WhatsApp
+                try {
+                    const audioBuffer = fs.readFileSync(filePath);
+                    await sock.sendMessage(msg.key.remoteJid, { 
+                        audio: audioBuffer, 
+                        mimetype: 'audio/mp4', 
+                        ptt: false 
+                    }, { quoted: msg });
+                } catch (sendErr) {
+                    console.error("[Send Audio Error]:", sendErr);
+                } finally {
+                    // 5. Hapus file temp setelah dikirim (Clean up)
+                    if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+                }
+            });
 
         } catch (e) {
-            console.error("[Play Command Error]:", e);
-            sock.sendMessage(msg.key.remoteJid, { text: "❌ Koneksi mesih pencari YouTube sedang terdistorsi/error." }, { quoted: msg });
+            console.error("[Play Local Engine Error]:", e);
+            sock.sendMessage(msg.key.remoteJid, { text: "❌ Sistem internal mengalami kegagalan proses." }, { quoted: msg });
         }
     }
 };
