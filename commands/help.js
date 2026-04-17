@@ -7,10 +7,10 @@ export default {
         const p = config.prefix;
 
         const categories = {
-            "System": ["restart", "update", "speedtest", "ping", "sysinfo"],
-            "AI & Media": ["ai", "summarize", "play", "tiktok"],
-            "Utilitas": ["afk", "sticker", "remindme"],
-            "Grup": ["kick", "promote", "demote", "hidetag"]
+            "System":     ["restart", "update", "speedtest", "ping", "sysinfo"],
+            "AI & Media": ["ai", "summarize", "play", "tiktok", "ig", "yt", "twitter"],
+            "Utilitas":   ["afk", "sticker", "remindme"],
+            "Grup":       ["kick", "promote", "demote", "hidetag"]
         };
 
         let out = `*Wil-AI* — Command Reference\n\n`;

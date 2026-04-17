@@ -32,7 +32,9 @@ export default {
             let hdVideoUrl = data.hdplay || videoUrl; // Prefer HD if available
             if (hdVideoUrl.startsWith('/')) hdVideoUrl = `https://www.tikwm.com${hdVideoUrl}`;
             
-            const caption = `Pengunduh Video TikTok\nAkun: ${data.author?.nickname || 'Tidak diketahui'}\nDeskripsi: ${data.title || '-'}\nMusik: ${data.music_info?.title || '-'}\nStatus: Video berhasil diunduh.`;
+            const nickname = data.author?.nickname || 'Unknown';
+            const desc = data.title ? `\n_${data.title.slice(0, 100)}${data.title.length > 100 ? '…' : ''}_` : '';
+            const caption = `*TikTok* · @${nickname}${desc}`;
 
             await sock.sendMessage(msg.key.remoteJid, { 
                 video: { url: hdVideoUrl }, 
