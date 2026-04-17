@@ -22,24 +22,47 @@ export default {
             // 2. Berikan notifikasi awal kepada user (berupa thumbnail & Info)
             await sock.sendMessage(msg.key.remoteJid, { image: { url: video.thumbnail }, caption: caption }, { quoted: msg });
             
-            // 3. Tarik MP3 menggunakan Public API
-            // API Vreden and AEMT are popular robust public YouTube scrapers
-            const apiUrl = `https://api.vreden.web.id/api/ytmp3?url=${encodeURIComponent(video.url)}`;
-            const response = await axios.get(apiUrl).catch(() => null);
-            
+            // 3. Tarik MP3 menggunakan Multi-API Fallback System
+            const youtubeUrl = video.url;
+            const apiSources = [
+                {
+                    url: `https://api.vreden.web.id/api/ytmp3?url=${encodeURIComponent(youtubeUrl)}`,
+                    parser: (data) => data?.result?.download?.url || data?.result?.download
+                },
+                {
+                    url: `https://aemt.me/youtube?url=${encodeURIComponent(youtubeUrl)}&filter=audioandvideo`,
+                    parser: (data) => data?.url
+                },
+                {
+                    url: `https://api.siputzx.my.id/api/d/ytmp3?url=${encodeURIComponent(youtubeUrl)}`,
+                    parser: (data) => data?.data?.dl || data?.data?.url
+                },
+                {
+                    url: `https://api.tiklydown.eu.org/api/download/ytmp3?url=${encodeURIComponent(youtubeUrl)}`,
+                    parser: (data) => data?.url || data?.result?.url
+                }
+            ];
+
             let audioUrl = null;
-            if (response && response.data && response.data.result && response.data.result.download) {
-                audioUrl = response.data.result.download.url || response.data.result.download;
+            
+            // Loop through each API until one returns a valid audio URL
+            for (const source of apiSources) {
+                try {
+                    const res = await axios.get(source.url, { timeout: 10000 }).catch(() => null);
+                    if (res && res.data) {
+                        const parsedUrl = source.parser(res.data);
+                        if (parsedUrl) {
+                            audioUrl = parsedUrl;
+                            break; // Stop immediately if we found a working link
+                        }
+                    }
+                } catch (err) {
+                    console.error("[API Fallback Error]:", err.message);
+                }
             }
 
             if (!audioUrl) {
-                // Fallback REST API
-                const fbRes = await axios.get(`https://aemt.me/youtube?url=${encodeURIComponent(video.url)}&filter=audioandvideo`).catch(() => null);
-                if (fbRes && fbRes.data && fbRes.data.url) audioUrl = fbRes.data.url;
-            }
-
-            if (!audioUrl) {
-                return sock.sendMessage(msg.key.remoteJid, { text: "❌ Gagal mengonversi video YouTube ini menjadi MP3. Server pihak ketiga sedang sibuk/down." }, { quoted: msg });
+                return sock.sendMessage(msg.key.remoteJid, { text: "❌ Semua server pengunduh sedang sibuk. Silakan coba lagi beberapa saat lagi atau gunakan judul lagu lain." }, { quoted: msg });
             }
 
             await sock.sendMessage(msg.key.remoteJid, { 
