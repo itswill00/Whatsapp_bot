@@ -6,8 +6,13 @@ export default {
     description: "Menarik (git pull) pembaruan otomatis dari GitHub (Hanya Owner)",
     execute: async (sock, msg, args) => {
         // Keamanan mutlak: Hanya eksekusi git jika itu owner asli
-        const sender = msg.key.participant || msg.key.remoteJid;
-        if (sender !== config.ownerNumber) return;
+        let sender = msg.key.participant || msg.key.remoteJid;
+        if (sender.includes(':')) sender = sender.split(':')[0] + '@s.whatsapp.net';
+        
+        let configOwner = config.ownerNumber;
+        if (configOwner.includes(':')) configOwner = configOwner.split(':')[0] + '@s.whatsapp.net';
+
+        if (sender !== configOwner) return;
 
         await sock.sendMessage(msg.key.remoteJid, { text: "⏳ Sedang menghubungi GitHub Repository dan mensinkronisasikan perubahan..." }, { quoted: msg });
 

@@ -42,9 +42,6 @@ export async function loadCommands() {
  * Main message handler to be attached to connection updates
  */
 export async function messageHandler(sock, msg) {
-    // Prevent processing messages from the bot itself
-    if (msg.key.fromMe) return;
-
     // --- AFK LOGIC LISTENER ---
     let rawSender = msg.key.participant || msg.key.remoteJid;
     const sender = rawSender.includes(':') ? rawSender.split(':')[0] + '@s.whatsapp.net' : rawSender;
@@ -59,7 +56,6 @@ export async function messageHandler(sock, msg) {
 
     // 1b. If the Owner sends a message to the bot, remove the BOT's AFK status as well
     const botId = sock.user.id.includes(':') ? sock.user.id.split(':')[0] + '@s.whatsapp.net' : sock.user.id;
-    
     let configOwner = config.ownerNumber;
     if (configOwner.includes(':')) configOwner = configOwner.split(':')[0] + '@s.whatsapp.net';
 
@@ -69,6 +65,9 @@ export async function messageHandler(sock, msg) {
         afkUsers.delete(botId);
         await sock.sendMessage(msg.key.remoteJid, { text: `👋 Welcome back Bos! AFK Global Bot telah dimatikan.\n(Lama AFK: ${duration} detik).` }, { quoted: msg });
     }
+
+    // Prevent processing messages from the bot itself for other logic
+    if (msg.key.fromMe) return;
 
     // 2. Check if sender mentioned or replied to an AFK user
     const mentionedJids = msg.message?.extendedTextMessage?.contextInfo?.mentionedJid || [];

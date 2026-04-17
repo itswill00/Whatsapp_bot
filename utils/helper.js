@@ -27,12 +27,19 @@ export async function getGroupDetails(sock, msg) {
     const groupMetadata = await sock.groupMetadata(msg.key.remoteJid).catch(e => null);
     if (!groupMetadata) return { isGroup: true, error: true };
 
-    const sender = msg.key.participant || msg.key.remoteJid;
+    let rawSender = msg.key.participant || msg.key.remoteJid;
+    const sender = rawSender.includes(':') ? rawSender.split(':')[0] + '@s.whatsapp.net' : rawSender;
+    
     // Baileys sock.user.id often contains a colon for the device ID (e.g. 62812...:12@s.whatsapp.net)
-    const botId = sock.user.id.split(':')[0] + '@s.whatsapp.net';
+    const botId = sock.user.id.includes(':') ? sock.user.id.split(':')[0] + '@s.whatsapp.net' : sock.user.id;
 
     const participants = groupMetadata.participants;
-    const isSenderAdmin = participants.some(p => p.id === sender && (p.admin === 'admin' || p.admin === 'superadmin'));
+    
+    // In Baileys, participant id in groupMetadata usually doesn't have a colon, but we must be safe
+    const isSenderAdmin = participants.some(p => {
+        const pId = p.id.includes(':') ? p.id.split(':')[0] + '@s.whatsapp.net' : p.id;
+        return pId === sender && (p.admin === 'admin' || p.admin === 'superadmin');
+    });
     const isBotAdmin = participants.some(p => p.id === botId && (p.admin === 'admin' || p.admin === 'superadmin'));
 
     return {
