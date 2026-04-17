@@ -14,21 +14,21 @@ export default {
 
         if (sender !== configOwner) return;
 
-        await sock.sendMessage(msg.key.remoteJid, { text: "⏳ Sedang menghubungi GitHub Repository dan mensinkronisasikan perubahan..." }, { quoted: msg });
+        await sock.sendMessage(msg.key.remoteJid, { text: "SYSTEM UPDATE\nAction: git_pull_origin\nStatus: synchronizing" }, { quoted: msg });
 
         exec('git pull origin main', async (err, stdout, stderr) => {
             if (err) {
                 console.error("[Git Pull Error]:", err);
-                return await sock.sendMessage(msg.key.remoteJid, { text: `❌ Sistem gagal ditarik dari GitHub:\n\n${stderr}` }, { quoted: msg });
+                return await sock.sendMessage(msg.key.remoteJid, { text: `ERROR: git_pull_failed\nDetails: ${stderr}` }, { quoted: msg });
             }
 
             if (stdout.includes('Already up to date')) {
-                return await sock.sendMessage(msg.key.remoteJid, { text: "✅ Bot sudah menggunakan versi paling terbaru. Tidak ada update yang tersedia." }, { quoted: msg });
+                return await sock.sendMessage(msg.key.remoteJid, { text: "SYSTEM UPDATE\nStatus: already_up_to_date" }, { quoted: msg });
             }
 
             // Jika ada update (perubahan baris kode)
             await sock.sendMessage(msg.key.remoteJid, { 
-                text: `✅ *Update Sukses Ditarik!*\n\n*Log Output:*\n${stdout}\n\n🔄 Bot akan melalukan _auto-restart_ untuk menerapkan pembaruan logika...` 
+                text: `SYSTEM UPDATE\nStatus: successfully_merged\nDetails: ${stdout}\nAction: auto_restart` 
             }, { quoted: msg });
             
             // Tunggu 2 detik, lalu exit node. PM2 akan secara otomatis men-spawn bot lagi dengan versi terbaru!

@@ -40,32 +40,30 @@ export default {
         const processUptime = formatUptime(process.uptime());
         const nodeMemUsage = process.memoryUsage();
         
-        // Build Aesthetic Reporting UI
-        const text = `🖥️ *SYSTEM DIAGNOSTICS & INFO* 🖥️
+        // Build Minimalist Monotonic UI
+        const text = `SYSTEM DIAGNOSTICS
+        
+OS & HOSTING
+Platform: ${os.type()} (${os.arch()})
+Uptime: ${serverUptime}
 
-🌐 *HOSTING & OS*
-└ *Platform:* ${os.type()} (${os.arch()} architecture)
-└ *Server Uptime:* ${serverUptime}
+PROCESSOR
+Model: ${cpuModel}
+Cores: ${cpuCores}
 
-💻 *PROCESSOR (CPU)*
-└ *Model:* ${cpuModel}
-└ *Logical Cores:* ${cpuCores} Core(s)
+MEMORY
+Total: ${formatBytes(totalMem)}
+Used: ${formatBytes(usedMem)} (${memUsagePercent}%)
+Free: ${formatBytes(freeMem)}
 
-🧠 *MEMORY (RAM)*
-└ *Total Storage:* ${formatBytes(totalMem)}
-└ *Digunakan:* ${formatBytes(usedMem)} (${memUsagePercent}%)
-└ *Tersedia:* ${formatBytes(freeMem)}
+BOT RUNTIME
+Version: ${process.version}
+Uptime: ${processUptime}
+Memory RSS: ${formatBytes(nodeMemUsage.rss)}
+Heap Used: ${formatBytes(nodeMemUsage.heapUsed)}
 
-⚙️ *BOT RUNTIME (NODE.JS)*
-└ *Node Version:* ${process.version}
-└ *Bot Uptime:* ${processUptime}
-└ *Console RAM RSS:* ${formatBytes(nodeMemUsage.rss)}
-└ *Heap Used:* ${formatBytes(nodeMemUsage.heapUsed)}
-
-📋 *MODULES*
-└ *Total Command Dimuat:* ${commands ? commands.size : '~'} Files
-
-_Sistem ini dioperasikan menggunakan arsitektur Modular Baileys Multi-Device._`;
+METRICS
+Commands: ${commands ? commands.size : '0'}`;
 
         await sock.sendMessage(msg.key.remoteJid, { text: text }, { quoted: msg });
     }

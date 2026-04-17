@@ -23,7 +23,7 @@ export default {
             const data = response.data?.data;
 
             if (!data || !data.play) {
-                return await sock.sendMessage(msg.key.remoteJid, { text: "❌ Gagal mengunduh. Pastikan video tidak di-private." }, { quoted: msg });
+                return await sock.sendMessage(msg.key.remoteJid, { text: "ERROR: extraction_failed" }, { quoted: msg });
             }
 
             let videoUrl = data.play;
@@ -32,7 +32,7 @@ export default {
             let hdVideoUrl = data.hdplay || videoUrl; // Prefer HD if available
             if (hdVideoUrl.startsWith('/')) hdVideoUrl = `https://www.tikwm.com${hdVideoUrl}`;
             
-            const caption = `📱 *TikTok Downloader*\n\n👤 *Akun:* ${data.author?.nickname || 'Unknown'}\n📝 *Deskripsi:* ${data.title || '-'}\n🎵 *Musik:* ${data.music_info?.title || '-'}\n\n_Auto-Downloaded by Bot_`;
+            const caption = `TIKTOK DOWNLOADER\nAccount: ${data.author?.nickname || 'NA'}\nDescription: ${data.title || 'NA'}\nMusic: ${data.music_info?.title || 'NA'}\nStatus: successfully_extracted`;
 
             await sock.sendMessage(msg.key.remoteJid, { 
                 video: { url: hdVideoUrl }, 
@@ -42,7 +42,7 @@ export default {
 
         } catch (error) {
             console.error("[Tiktok Downloader Error]:", error?.message);
-            await sock.sendMessage(msg.key.remoteJid, { text: "❌ Server pengunduh internal error atau koneksi terputus." }, { quoted: msg });
+            await sock.sendMessage(msg.key.remoteJid, { text: "ERROR: connection_to_extractor_failed" }, { quoted: msg });
         }
     }
 };

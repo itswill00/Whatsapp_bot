@@ -13,7 +13,7 @@ export default {
 
         if (sender !== configOwner) return; 
 
-        await sock.sendMessage(msg.key.remoteJid, { text: "🔄 Mulai merestart node process... Jika menggunakan PM2, bot akan online kembali dalam beberapa detik." }, { quoted: msg });
+        await sock.sendMessage(msg.key.remoteJid, { text: "SYSTEM RESTART\nAction: process_reboot\nStatus: triggered" }, { quoted: msg });
         
         // Timeout sedikit sebelum force-close untuk memastikan pesan terkirim
         setTimeout(() => {

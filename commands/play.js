@@ -28,7 +28,7 @@ export default {
                 return sock.sendMessage(msg.key.remoteJid, { text: "❌ Durasi terlalu panjang! Maksimal 10 menit agar server tetap stabil." }, { quoted: msg });
             }
 
-            const caption = `🎵 *YT-DLP LOCAL ENGINE* 🎵\n\n📌 *Judul:* ${video.title}\n⏱️ *Durasi:* ${video.timestamp}\n🔗 *Link:* ${video.url}\n\n_⏳ Sedang mengunduh & mengonversi via VPS Engine..._`;
+            const caption = `YOUTUBE DOWNLOADER\nTitle: ${video.title}\nDuration: ${video.timestamp}\nStatus: processing_local_engine`;
             await sock.sendMessage(msg.key.remoteJid, { image: { url: video.thumbnail }, caption: caption }, { quoted: msg });
 
             // 2. Persiapkan Folder Temp
@@ -49,12 +49,11 @@ export default {
                     console.error("[yt-dlp Stderr]:", stderr);
                     
                     if (error.message.includes('not found')) {
-                        return sock.sendMessage(msg.key.remoteJid, { text: "❌ *Error Teknis:* yt-dlp belum terpasang di VPS. Harap jalankan perintah instalasi curl yang saya berikan sebelumnya." }, { quoted: msg });
+                        return sock.sendMessage(msg.key.remoteJid, { text: "ERROR: yt_dlp_binary_not_found_on_vps" }, { quoted: msg });
                     }
                     
-                    // Kirim potongan stderr ke user agar saya bisa bantu debug lebih dalam
                     const errorSnippet = stderr ? stderr.slice(-150) : error.message.slice(0, 150);
-                    return sock.sendMessage(msg.key.remoteJid, { text: `❌ *Gagal memproses audio.*\n\n*Error Log:* \`\`\`${errorSnippet}\`\`\`` }, { quoted: msg });
+                    return sock.sendMessage(msg.key.remoteJid, { text: `ERROR: processing_failed\nDetails: ${errorSnippet}` }, { quoted: msg });
                 }
 
                 // 4. Kirim Audio ke WhatsApp

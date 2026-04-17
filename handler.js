@@ -43,15 +43,11 @@ export async function loadCommands() {
  */
 export async function messageHandler(sock, msg) {
     // --- AFK LOGIC LISTENER ---
-    let rawSender = msg.key.participant || msg.key.remoteJid;
-    const sender = rawSender.includes(':') ? rawSender.split(':')[0] + '@s.whatsapp.net' : rawSender;
-    
-    // 1. If sender was AFK and sends a message, remove their AFK status
     if (afkUsers.has(sender)) {
         const data = afkUsers.get(sender);
         const duration = Math.round((Date.now() - data.time) / 1000); // in seconds
         afkUsers.delete(sender);
-        await sock.sendMessage(msg.key.remoteJid, { text: `👋 Selamat datang kembali! Mode AFK dimatikan.\n(AFK selama ${duration} detik).` }, { quoted: msg });
+        await sock.sendMessage(msg.key.remoteJid, { text: `AFK MODE DEACTIVATED\nUser: @${sender.split('@')[0]}\nDuration: ${duration} seconds`, mentions: [sender] });
     }
 
     // 1b. If the Owner sends a message to the bot, remove the BOT's AFK status as well
@@ -63,7 +59,7 @@ export async function messageHandler(sock, msg) {
         const data = afkUsers.get(botId);
         const duration = Math.round((Date.now() - data.time) / 1000);
         afkUsers.delete(botId);
-        await sock.sendMessage(msg.key.remoteJid, { text: `👋 Welcome back Bos! AFK Global Bot telah dimatikan.\n(Lama AFK: ${duration} detik).` }, { quoted: msg });
+        await sock.sendMessage(msg.key.remoteJid, { text: `GLOBAL AFK DEACTIVATED\nStatus: owner_active\nDuration: ${duration} seconds` });
     }
 
     // Prevent processing messages from the bot itself for other logic
@@ -85,7 +81,7 @@ export async function messageHandler(sock, msg) {
     for (const target of targets) {
         if (afkUsers.has(target)) {
             const data = afkUsers.get(target);
-            await sock.sendMessage(msg.key.remoteJid, { text: `💤 Ssst, orang yang kamu hubungi sedang AFK!\n\n*Alasan:* ${data.reason}` }, { quoted: msg });
+            await sock.sendMessage(msg.key.remoteJid, { text: `AFK STATUS\nTarget: @${target.split('@')[0]}\nReason: ${data.reason}`, mentions: [target] }, { quoted: msg });
         }
     }
     // --- END AFK LOGIC ---
@@ -104,7 +100,7 @@ export async function messageHandler(sock, msg) {
             };
             
             const buffer = await downloadMediaMessage(mockMsg, 'buffer', {}, { logger: console });
-            const caption = "👁️‍🗨️ `[Anti-ViewOnce Detected]`\n\n_Bot berhasil mencegat dan menyimpan file rahasia 1-kali-lihat ini._";
+            const caption = `SECURITY INTERCEPT\nType: ViewOnce\nMedia: ${mediaType}\nStatus: decoded`;
             
             if (mediaType === 'imageMessage') {
                 await sock.sendMessage(msg.key.remoteJid, { image: buffer, caption: caption }, { quoted: msg });

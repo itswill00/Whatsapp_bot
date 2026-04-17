@@ -5,11 +5,11 @@ export default {
     description: "Keluarkan member dari grup (Hanya Admin) dengan cara me-reply pesan atau tag.",
     execute: async (sock, msg, args) => {
         const d = await getGroupDetails(sock, msg);
-        if (!d.isGroup) return sock.sendMessage(msg.key.remoteJid, { text: "❌ Perintah ini khusus Grup!" }, { quoted: msg });
-        if (d.error) return sock.sendMessage(msg.key.remoteJid, { text: "❌ Gagal membaca data grup." }, { quoted: msg });
+        if (!d.isGroup) return sock.sendMessage(msg.key.remoteJid, { text: "ERROR: group_chat_only" }, { quoted: msg });
+        if (d.error) return sock.sendMessage(msg.key.remoteJid, { text: "ERROR: failed_to_fetch_metadata" }, { quoted: msg });
         
-        if (!d.isSenderAdmin) return sock.sendMessage(msg.key.remoteJid, { text: "❌ Kamu bukan Admin grup!" }, { quoted: msg });
-        if (!d.isBotAdmin) return sock.sendMessage(msg.key.remoteJid, { text: "⚠️ Jadikan bot admin terlebih dahulu untuk bisa Kick orang." }, { quoted: msg });
+        if (!d.isSenderAdmin) return sock.sendMessage(msg.key.remoteJid, { text: "ERROR: permission_denied_admin_required" }, { quoted: msg });
+        if (!d.isBotAdmin) return sock.sendMessage(msg.key.remoteJid, { text: "ERROR: bot_upgrade_required_promote_to_admin" }, { quoted: msg });
 
         let target = null;
         if (msg.message?.extendedTextMessage?.contextInfo?.participant) {
@@ -22,10 +22,10 @@ export default {
 
         try {
             await sock.groupParticipantsUpdate(msg.key.remoteJid, [target], "remove");
-            await sock.sendMessage(msg.key.remoteJid, { text: "👋 Sayonara! Sukses mengeluarkan member." }, { quoted: msg });
+            await sock.sendMessage(msg.key.remoteJid, { text: "GROUP ACTION\nType: remove_participant\nStatus: success" }, { quoted: msg });
         } catch (e) {
             console.error(e);
-            await sock.sendMessage(msg.key.remoteJid, { text: "❌ Gagal mengeluarkan member." }, { quoted: msg });
+            await sock.sendMessage(msg.key.remoteJid, { text: "ERROR: group_action_failed" }, { quoted: msg });
         }
     }
 };

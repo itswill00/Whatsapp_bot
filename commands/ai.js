@@ -8,11 +8,11 @@ export default {
     description: "Ngobrol pintar dengan AI menggunakan Groq LLaMA3",
     execute: async (sock, msg, args) => {
         if (!config.groqApiKey) {
-            return await sock.sendMessage(msg.key.remoteJid, { text: "⚠️ API Key Groq belum diatur di config.js!" }, { quoted: msg });
+            return await sock.sendMessage(msg.key.remoteJid, { text: "ERROR: groq_api_key_not_configured" }, { quoted: msg });
         }
 
         if (args.length === 0) {
-            return await sock.sendMessage(msg.key.remoteJid, { text: `ℹ️ Gunakan format: ${config.prefix}ai <pertanyaanmu>` }, { quoted: msg });
+            return await sock.sendMessage(msg.key.remoteJid, { text: `INFO: Usage: ${config.prefix}ai <query>` }, { quoted: msg });
         }
 
         if (!groq) groq = new Groq({ apiKey: config.groqApiKey });
@@ -20,20 +20,23 @@ export default {
         const prompt = args.join(" ");
 
         try {
-            // Reaction timeout loop prevention
-            await sock.sendMessage(msg.key.remoteJid, { react: { text: "🤖", key: msg.key } });
-
             const chatCompletion = await groq.chat.completions.create({
-                messages: [{ role: "user", content: prompt }],
-                model: "llama-3.1-8b-instant", // New LLaMA-3.1 model because v3.0 was decommissioned
+                messages: [
+                    { 
+                        role: "system", 
+                        content: "You are a technical system assistant. Your tone is cold, formal, and direct. Provide technical clarity and raw data without excessive pleasantries, 'fluff', or emojis. Be to-the-point. Persona: Zero Gimmick Technical Entity." 
+                    },
+                    { role: "user", content: prompt }
+                ],
+                model: "llama-3.1-8b-instant",
             });
 
-            const reply = chatCompletion.choices[0]?.message?.content || "Maaf, AI tidak dapat merespon saat ini.";
+            const reply = chatCompletion.choices[0]?.message?.content || "ERROR: null_response_from_engine";
             
             await sock.sendMessage(msg.key.remoteJid, { text: reply }, { quoted: msg });
         } catch (error) {
             console.error("[Groq AI Error]:", error?.message || error);
-            await sock.sendMessage(msg.key.remoteJid, { text: "❌ Terjadi masalah dengan koneksi AI." }, { quoted: msg });
+            await sock.sendMessage(msg.key.remoteJid, { text: "ERROR: ai_connection_failed" }, { quoted: msg });
         }
     }
 };

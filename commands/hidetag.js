@@ -5,16 +5,16 @@ export default {
     description: "Mentions semua anggota grup secara diam-diam (Hanya Admin)",
     execute: async (sock, msg, args) => {
         const d = await getGroupDetails(sock, msg);
-        if (!d.isGroup) return sock.sendMessage(msg.key.remoteJid, { text: "❌ Perintah khusus grup!" }, { quoted: msg });
+        if (!d.isGroup) return sock.sendMessage(msg.key.remoteJid, { text: "ERROR: group_chat_only" }, { quoted: msg });
         if (d.error) return;
         
-        if (!d.isSenderAdmin) return sock.sendMessage(msg.key.remoteJid, { text: "❌ Hanya Admin yang boleh melakukan tag ke semua orang." }, { quoted: msg });
+        if (!d.isSenderAdmin) return sock.sendMessage(msg.key.remoteJid, { text: "ERROR: permission_denied_admin_required" }, { quoted: msg });
 
         const mappedJids = d.participants.map(part => part.id);
-        const text = args.length > 0 ? args.join(' ') : 'Panggilan kepada semua member grup!';
+        const text = args.length > 0 ? args.join(' ') : 'No context provided';
 
         await sock.sendMessage(msg.key.remoteJid, { 
-            text: `📢 *PENGUMUMAN*\n\n${text}`, 
+            text: `GROUP BROADCAST\nStatus: dispatched\nMessage: ${text}`, 
             mentions: mappedJids 
         });
     }
