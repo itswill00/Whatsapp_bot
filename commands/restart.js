@@ -18,7 +18,7 @@ export default {
         console.log(`[Auth Check] Sender: ${sender} | Owner: ${configOwner}`);
 
         if (sender !== configOwner) {
-            return await sock.sendMessage(msg.key.remoteJid, { text: "Maaf, akses ditolak. Perintah ini hanya bisa dijalankan oleh Owner." }, { quoted: msg });
+            return await sock.sendMessage(msg.key.remoteJid, { text: `Maaf, akses ditolak.\n\nID Kamu: ${sender}\nID Owner: ${configOwner}\n\nPastikan nomor di config.js sudah benar-benar sama.` }, { quoted: msg });
         } 
 
         // Save reboot state

@@ -19,7 +19,7 @@ export default {
         console.log(`[Auth Check] Update Sender: ${sender} | Owner: ${configOwner}`);
 
         if (sender !== configOwner) {
-            return await sock.sendMessage(msg.key.remoteJid, { text: "Maaf, akses ditolak. Perintah ini khusus untuk Owner bot." }, { quoted: msg });
+            return await sock.sendMessage(msg.key.remoteJid, { text: `Maaf, akses ditolak.\n\nID Kamu: ${sender}\nID Owner: ${configOwner}\n\nPastikan nomor di config.js sudah benar-benar sama.` }, { quoted: msg });
         }
 
         await sock.sendMessage(msg.key.remoteJid, { text: "Sedang mengunduh update dari GitHub..." }, { quoted: msg });
