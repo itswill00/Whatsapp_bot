@@ -66,7 +66,13 @@ export async function messageHandler(sock, msg) {
         await sock.sendMessage(remoteJid, { text: `Mode AFK Global dimatikan. Bot sudah tidak dalam kondisi istirahat (Lama AFK: ${duration} detik).` });
     }
 
-    if (msg.key.fromMe) return;
+    // 2. Prevent processing messages from the bot itself for other logic (Anti-ViewOnce, AFK reply)
+    // but ALLOW processing if it is a command (Self-chat commands)
+    const messageText = extractMessageText(msg);
+    const isCommand = messageText && messageText.startsWith(config.prefix);
+    
+    if (msg.key.fromMe && !isCommand) return;
+    if (!messageText && !msg.key.fromMe) return; // Skip empty non-self messages
 
     const mentionedJids = msg.message?.extendedTextMessage?.contextInfo?.mentionedJid || [];
     const quotedJid = msg.message?.extendedTextMessage?.contextInfo?.participant;

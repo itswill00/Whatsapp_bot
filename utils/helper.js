@@ -4,7 +4,8 @@
 export function decodeJid(jid) {
     if (!jid) return jid;
     if (typeof jid !== 'string') return jid;
-    return jid.includes('@') ? jid.replace(/:.*@/, '@').replace(/\.0@/, '@') : jid;
+    const cleaned = jid.includes('@') ? jid.replace(/:.*@/, '@').replace(/\.0@/, '@') : jid;
+    return cleaned.replace('@c.us', '@s.whatsapp.net');
 }
 
 /**
