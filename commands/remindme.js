@@ -22,13 +22,13 @@ export default {
         if (ms > 86400000) return sock.sendMessage(msg.key.remoteJid, { text: "❌ Memori bot tidak dapat menampung timer lebih dari 24 Jam." }, { quoted: msg });
 
         await sock.sendMessage(msg.key.remoteJid, { 
-            text: `REMINDER STATUS\nStatus: scheduled\nIdentifier: @${sender.split('@')[0]}\nDuration: ${amount}${unit}\nContext: ${reminderText}`,
+            text: `Pengingat Ditambahkan\nTarget: @${sender.split('@')[0]}\nDurasi: ${amount}${unit}\nPesan: ${reminderText}`,
             mentions: [sender]
         }, { quoted: msg });
 
         // Spin up the background timer event
         setTimeout(async () => {
-            const announce = `REMINDER ALERT\nTarget: @${sender.split('@')[0]}\nDuration_Expired: ${amount}${unit}\nMessage: ${reminderText}`;
+            const announce = `Pengingat Selesai\nTarget: @${sender.split('@')[0]}\nWaktu tunggu ${amount}${unit} sudah habis.\nPesan kamu: ${reminderText}`;
             await sock.sendMessage(msg.key.remoteJid, { text: announce, mentions: [sender] });
         }, ms);
     }

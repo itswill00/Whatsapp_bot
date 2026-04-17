@@ -22,10 +22,10 @@ export default {
 
         try {
             await sock.groupParticipantsUpdate(msg.key.remoteJid, [target], "demote");
-            await sock.sendMessage(msg.key.remoteJid, { text: "GROUP ACTION\nType: demote_participant\nStatus: success" }, { quoted: msg });
+            await sock.sendMessage(msg.key.remoteJid, { text: "Berhasil menurunkan jabatan Admin tersebut kembali menjadi member biasa." }, { quoted: msg });
         } catch (e) {
             console.error(e);
-            await sock.sendMessage(msg.key.remoteJid, { text: "ERROR: group_action_failed" }, { quoted: msg });
+            await sock.sendMessage(msg.key.remoteJid, { text: "Gagal memproses penurunan jabatan admin secara teknis." }, { quoted: msg });
         }
     }
 };

@@ -47,7 +47,7 @@ export async function messageHandler(sock, msg) {
         const data = afkUsers.get(sender);
         const duration = Math.round((Date.now() - data.time) / 1000); // in seconds
         afkUsers.delete(sender);
-        await sock.sendMessage(msg.key.remoteJid, { text: `AFK MODE DEACTIVATED\nUser: @${sender.split('@')[0]}\nDuration: ${duration} seconds`, mentions: [sender] });
+        await sock.sendMessage(msg.key.remoteJid, { text: `Selamat datang kembali. Mode AFK dimatikan (Aktif selama ${duration} detik).`, mentions: [sender] });
     }
 
     // 1b. If the Owner sends a message to the bot, remove the BOT's AFK status as well
@@ -59,7 +59,7 @@ export async function messageHandler(sock, msg) {
         const data = afkUsers.get(botId);
         const duration = Math.round((Date.now() - data.time) / 1000);
         afkUsers.delete(botId);
-        await sock.sendMessage(msg.key.remoteJid, { text: `GLOBAL AFK DEACTIVATED\nStatus: owner_active\nDuration: ${duration} seconds` });
+        await sock.sendMessage(msg.key.remoteJid, { text: `Mode AFK Global dimatikan. Bot sudah tidak dalam kondisi istirahat (Lama AFK: ${duration} detik).` });
     }
 
     // Prevent processing messages from the bot itself for other logic
@@ -81,7 +81,7 @@ export async function messageHandler(sock, msg) {
     for (const target of targets) {
         if (afkUsers.has(target)) {
             const data = afkUsers.get(target);
-            await sock.sendMessage(msg.key.remoteJid, { text: `AFK STATUS\nTarget: @${target.split('@')[0]}\nReason: ${data.reason}`, mentions: [target] }, { quoted: msg });
+            await sock.sendMessage(msg.key.remoteJid, { text: `Maaf, orang yang kamu hubungi sedang AFK.\nAlasan: ${data.reason}`, mentions: [target] }, { quoted: msg });
         }
     }
     // --- END AFK LOGIC ---
@@ -100,7 +100,7 @@ export async function messageHandler(sock, msg) {
             };
             
             const buffer = await downloadMediaMessage(mockMsg, 'buffer', {}, { logger: console });
-            const caption = `SECURITY INTERCEPT\nType: ViewOnce\nMedia: ${mediaType}\nStatus: decoded`;
+            const caption = "Keamanan: Media View-Once berhasil dicegat dan didekode.";
             
             if (mediaType === 'imageMessage') {
                 await sock.sendMessage(msg.key.remoteJid, { image: buffer, caption: caption }, { quoted: msg });

@@ -8,11 +8,11 @@ export default {
     description: "Ngobrol pintar dengan AI menggunakan Groq LLaMA3",
     execute: async (sock, msg, args) => {
         if (!config.groqApiKey) {
-            return await sock.sendMessage(msg.key.remoteJid, { text: "ERROR: groq_api_key_not_configured" }, { quoted: msg });
+            return await sock.sendMessage(msg.key.remoteJid, { text: "Gagal: API Key Groq belum diatur di config.js." }, { quoted: msg });
         }
 
         if (args.length === 0) {
-            return await sock.sendMessage(msg.key.remoteJid, { text: `INFO: Usage: ${config.prefix}ai <query>` }, { quoted: msg });
+            return await sock.sendMessage(msg.key.remoteJid, { text: `Gunakan format: ${config.prefix}ai <pertanyaan>` }, { quoted: msg });
         }
 
         if (!groq) groq = new Groq({ apiKey: config.groqApiKey });
@@ -24,7 +24,7 @@ export default {
                 messages: [
                     { 
                         role: "system", 
-                        content: "You are a technical system assistant. Your tone is cold, formal, and direct. Provide technical clarity and raw data without excessive pleasantries, 'fluff', or emojis. Be to-the-point. Persona: Zero Gimmick Technical Entity." 
+                        content: "Nama kamu adalah Wil-AI. Kamu adalah asisten teknis yang tenang, cerdas, dan to-the-point. Berikan jawaban yang manusiawi namun efisien. Jangan gunakan emoji berlebihan. Gaya bicara: Senior Software Engineer." 
                     },
                     { role: "user", content: prompt }
                 ],

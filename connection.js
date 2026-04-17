@@ -1,7 +1,14 @@
 import { makeWASocket, useMultiFileAuthState, DisconnectReason, fetchLatestWaWebVersion } from '@whiskeysockets/baileys';
 import pino from 'pino';
 import qrcode from 'qrcode-terminal';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { messageHandler, loadCommands } from './handler.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const REBOOT_FILE = path.join(__dirname, 'data/reboot.json');
 
 // Setup basic Pino logger globally suppressing info logs for cleaner terminal
 const logger = pino({ level: 'silent' });
@@ -48,6 +55,26 @@ export async function startConnection() {
             }
         } else if (connection === 'open') {
             console.log('[Connection] Connected successfully!');
+            
+            // Check for persistent reboot notification
+            if (fs.existsSync(REBOOT_FILE)) {
+                try {
+                    const data = JSON.parse(fs.readFileSync(REBOOT_FILE, 'utf-8'));
+                    if (data.jid) {
+                        const type = data.type || 'restart';
+                        const message = type === 'update' 
+                            ? "Update berhasil, bot sudah aktif kembali dan siap digunakan." 
+                            : "Restart berhasil, bot sudah online kembali.";
+                        
+                        setTimeout(async () => {
+                            await sock.sendMessage(data.jid, { text: message });
+                            fs.unlinkSync(REBOOT_FILE);
+                        }, 2000); // Small delay to ensure session is fully ready
+                    }
+                } catch (e) {
+                    console.error("[Reboot Detect] Error:", e);
+                }
+            }
         }
     });
 

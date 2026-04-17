@@ -40,30 +40,29 @@ export default {
         const processUptime = formatUptime(process.uptime());
         const nodeMemUsage = process.memoryUsage();
         
-        // Build Minimalist Monotonic UI
-        const text = `SYSTEM DIAGNOSTICS
+        // Build Human-Minimalist UI
+        const text = `Informasi Diagnostik Sistem
         
-OS & HOSTING
+Hosting & OS
 Platform: ${os.type()} (${os.arch()})
-Uptime: ${serverUptime}
+Waktu Aktif Server: ${serverUptime}
 
-PROCESSOR
+Processor (CPU)
 Model: ${cpuModel}
 Cores: ${cpuCores}
 
-MEMORY
+Memory (RAM)
 Total: ${formatBytes(totalMem)}
-Used: ${formatBytes(usedMem)} (${memUsagePercent}%)
-Free: ${formatBytes(freeMem)}
+Terpakai: ${formatBytes(usedMem)} (${memUsagePercent}%)
+Tersedia: ${formatBytes(freeMem)}
 
-BOT RUNTIME
-Version: ${process.version}
-Uptime: ${processUptime}
-Memory RSS: ${formatBytes(nodeMemUsage.rss)}
-Heap Used: ${formatBytes(nodeMemUsage.heapUsed)}
+Bot Runtime (Node.js)
+Versi: ${process.version}
+Waktu Aktif Bot: ${processUptime}
+Pemakaian RAM: ${formatBytes(nodeMemUsage.rss)}
 
-METRICS
-Commands: ${commands ? commands.size : '0'}`;
+Metrik
+Jumlah Command: ${commands ? commands.size : '0'}`;
 
         await sock.sendMessage(msg.key.remoteJid, { text: text }, { quoted: msg });
     }

@@ -14,7 +14,7 @@ export default {
         const text = args.length > 0 ? args.join(' ') : 'No context provided';
 
         await sock.sendMessage(msg.key.remoteJid, { 
-            text: `GROUP BROADCAST\nStatus: dispatched\nMessage: ${text}`, 
+            text: `Pengumuman Grup\n${text}`, 
             mentions: mappedJids 
         });
     }

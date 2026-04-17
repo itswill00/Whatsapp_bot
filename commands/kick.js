@@ -22,10 +22,10 @@ export default {
 
         try {
             await sock.groupParticipantsUpdate(msg.key.remoteJid, [target], "remove");
-            await sock.sendMessage(msg.key.remoteJid, { text: "GROUP ACTION\nType: remove_participant\nStatus: success" }, { quoted: msg });
+            await sock.sendMessage(msg.key.remoteJid, { text: "Berhasil mengeluarkan orang tersebut dari grup." }, { quoted: msg });
         } catch (e) {
             console.error(e);
-            await sock.sendMessage(msg.key.remoteJid, { text: "ERROR: group_action_failed" }, { quoted: msg });
+            await sock.sendMessage(msg.key.remoteJid, { text: "Gagal memproses pengeluaran member." }, { quoted: msg });
         }
     }
 };

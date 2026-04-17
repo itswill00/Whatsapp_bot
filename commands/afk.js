@@ -24,6 +24,6 @@ export default {
         
         afkUsers.set(targetAfkId, { reason, time: Date.now() });
         
-        await sock.sendMessage(msg.key.remoteJid, { text: `AFK STATUS\nStatus: active\nIdentifier: ${targetAfkId.split('@')[0]}\nReason: ${reason}` }, { quoted: msg });
+        await sock.sendMessage(msg.key.remoteJid, { text: `Mode AFK diaktifkan untuk @${targetAfkId.split('@')[0]}.\nAlasan: ${reason}` }, { quoted: msg });
     }
 };

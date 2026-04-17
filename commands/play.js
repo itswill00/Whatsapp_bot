@@ -28,7 +28,7 @@ export default {
                 return sock.sendMessage(msg.key.remoteJid, { text: "❌ Durasi terlalu panjang! Maksimal 10 menit agar server tetap stabil." }, { quoted: msg });
             }
 
-            const caption = `YOUTUBE DOWNLOADER\nTitle: ${video.title}\nDuration: ${video.timestamp}\nStatus: processing_local_engine`;
+            const caption = `Pemutar Musik YouTube\nJudul: ${video.title}\nDurasi: ${video.timestamp}\nStatus: Sedang memproses file via VPS...`;
             await sock.sendMessage(msg.key.remoteJid, { image: { url: video.thumbnail }, caption: caption }, { quoted: msg });
 
             // 2. Persiapkan Folder Temp

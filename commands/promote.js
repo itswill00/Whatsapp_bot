@@ -22,10 +22,10 @@ export default {
 
         try {
             await sock.groupParticipantsUpdate(msg.key.remoteJid, [target], "promote");
-            await sock.sendMessage(msg.key.remoteJid, { text: "GROUP ACTION\nType: promote_participant\nStatus: success" }, { quoted: msg });
+            await sock.sendMessage(msg.key.remoteJid, { text: "Berhasil mengangkat member tersebut sebagai Admin." }, { quoted: msg });
         } catch (e) {
             console.error(e);
-            await sock.sendMessage(msg.key.remoteJid, { text: "ERROR: group_action_failed" }, { quoted: msg });
+            await sock.sendMessage(msg.key.remoteJid, { text: "Gagal mengangkat admin baru secara teknis." }, { quoted: msg });
         }
     }
 };
