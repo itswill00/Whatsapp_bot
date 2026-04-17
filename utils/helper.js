@@ -3,11 +3,8 @@
  */
 export function decodeJid(jid) {
     if (!jid) return jid;
-    if (jid.includes(':')) {
-        const decode = jid.split(':');
-        return `${decode[0]}@${decode[1].split('@')[1]}`;
-    }
-    return jid;
+    if (typeof jid !== 'string') return jid;
+    return jid.includes('@') ? jid.replace(/:.*@/, '@').replace(/\.0@/, '@') : jid;
 }
 
 /**

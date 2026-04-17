@@ -15,7 +15,12 @@ export default {
         const sender = decodeJid(msg.key.participant || msg.key.remoteJid);
         const configOwner = decodeJid(config.ownerNumber);
 
-        if (sender !== configOwner) return;
+        // Debugging JID in console
+        console.log(`[Auth Check] Update Sender: ${sender} | Owner: ${configOwner}`);
+
+        if (sender !== configOwner) {
+            return await sock.sendMessage(msg.key.remoteJid, { text: "Maaf, akses ditolak. Perintah ini khusus untuk Owner bot." }, { quoted: msg });
+        }
 
         await sock.sendMessage(msg.key.remoteJid, { text: "Sedang mengunduh update dari GitHub..." }, { quoted: msg });
 

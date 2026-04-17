@@ -14,7 +14,12 @@ export default {
         const sender = decodeJid(msg.key.participant || msg.key.remoteJid);
         const configOwner = decodeJid(config.ownerNumber);
 
-        if (sender !== configOwner) return; 
+        // Internal Debug Log
+        console.log(`[Auth Check] Sender: ${sender} | Owner: ${configOwner}`);
+
+        if (sender !== configOwner) {
+            return await sock.sendMessage(msg.key.remoteJid, { text: "Maaf, akses ditolak. Perintah ini hanya bisa dijalankan oleh Owner." }, { quoted: msg });
+        } 
 
         // Save reboot state
         const rebootPath = path.join(__dirname, '../data/reboot.json');
