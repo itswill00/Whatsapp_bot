@@ -2,6 +2,7 @@ import { exec } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { decodeJid } from '../utils/helper.js';
 import config from '../config.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -11,11 +12,8 @@ export default {
     name: "update",
     description: "Update bot dari GitHub (Hanya Owner)",
     execute: async (sock, msg, args) => {
-        let sender = msg.key.participant || msg.key.remoteJid;
-        if (sender.includes(':')) sender = sender.split(':')[0] + '@s.whatsapp.net';
-        
-        let configOwner = config.ownerNumber;
-        if (configOwner.includes(':')) configOwner = configOwner.split(':')[0] + '@s.whatsapp.net';
+        const sender = decodeJid(msg.key.participant || msg.key.remoteJid);
+        const configOwner = decodeJid(config.ownerNumber);
 
         if (sender !== configOwner) return;
 

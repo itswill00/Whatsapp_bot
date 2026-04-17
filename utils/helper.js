@@ -1,4 +1,16 @@
 /**
+ * Helper to normalize JIDs by removing Multi-Device suffixes (e.g., :1 or .0:1)
+ */
+export function decodeJid(jid) {
+    if (!jid) return jid;
+    if (jid.includes(':')) {
+        const decode = jid.split(':');
+        return `${decode[0]}@${decode[1].split('@')[1]}`;
+    }
+    return jid;
+}
+
+/**
  * Extracts the main text from various WhatsApp message types.
  * @param {Object} msg - The raw message object from Baileys
  * @returns {string} The extracted message text

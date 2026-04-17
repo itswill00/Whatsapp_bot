@@ -39,52 +39,65 @@ export async function loadCommands() {
 }
 
 /**
+ * Helper to normalize JIDs by removing Multi-Device suffixes (e.g., :1 or .0:1)
+ */
+function decodeJid(jid) {
+    if (!jid) return jid;
+    if (/:\d+@/gi.test(jid)) {
+        const decode = jid.split(':');
+        return `${decode[0]}@${decode[1].split('@')[1]}`;
+    }
+    return jid;
+}
+
+/**
  * Main message handler to be attached to connection updates
  */
 export async function messageHandler(sock, msg) {
+    const remoteJid = msg.key.remoteJid;
+    const isGroup = remoteJid.endsWith('@g.us');
+    const botId = decodeJid(sock.user?.id);
+    const configOwner = decodeJid(config.ownerNumber);
+
     // --- AFK LOGIC LISTENER ---
-    let rawSender = msg.key.participant || msg.key.remoteJid;
-    const sender = rawSender.includes(':') ? rawSender.split(':')[0] + '@s.whatsapp.net' : rawSender;
+    const rawSender = msg.key.participant || remoteJid;
+    const sender = decodeJid(rawSender);
 
     if (afkUsers.has(sender)) {
         const data = afkUsers.get(sender);
-        const duration = Math.round((Date.now() - data.time) / 1000); // in seconds
+        const duration = Math.round((Date.now() - data.time) / 1000); 
         afkUsers.delete(sender);
-        await sock.sendMessage(msg.key.remoteJid, { text: `Selamat datang kembali. Mode AFK dimatikan (Aktif selama ${duration} detik).`, mentions: [sender] });
+        await sock.sendMessage(remoteJid, { text: `Selamat datang kembali. Mode AFK dimatikan (Aktif selama ${duration} detik).`, mentions: [sender] });
     }
-
-    // 1b. If the Owner sends a message to the bot, remove the BOT's AFK status as well
-    const botId = sock.user.id.includes(':') ? sock.user.id.split(':')[0] + '@s.whatsapp.net' : sock.user.id;
-    let configOwner = config.ownerNumber;
-    if (configOwner.includes(':')) configOwner = configOwner.split(':')[0] + '@s.whatsapp.net';
 
     if (sender === configOwner && afkUsers.has(botId)) {
         const data = afkUsers.get(botId);
         const duration = Math.round((Date.now() - data.time) / 1000);
         afkUsers.delete(botId);
-        await sock.sendMessage(msg.key.remoteJid, { text: `Mode AFK Global dimatikan. Bot sudah tidak dalam kondisi istirahat (Lama AFK: ${duration} detik).` });
+        await sock.sendMessage(remoteJid, { text: `Mode AFK Global dimatikan. Bot sudah tidak dalam kondisi istirahat (Lama AFK: ${duration} detik).` });
     }
 
-    // Prevent processing messages from the bot itself for other logic
     if (msg.key.fromMe) return;
 
-    // 2. Check if sender mentioned or replied to an AFK user
     const mentionedJids = msg.message?.extendedTextMessage?.contextInfo?.mentionedJid || [];
     const quotedJid = msg.message?.extendedTextMessage?.contextInfo?.participant;
-    const targets = [...mentionedJids];
-    if (quotedJid) targets.push(quotedJid);
+    
+    // Build targets and normalize them all
+    const targets = mentionedJids.map(jid => decodeJid(jid));
+    if (quotedJid) targets.push(decodeJid(quotedJid));
 
-    // If it's a private chat, the message is implicitly directed at the bot/owner
-    const isGroup = msg.key.remoteJid.endsWith('@g.us');
+    // In private chat, the bot itself is the implied target
     if (!isGroup) {
-        const botTarget = sock.user.id.includes(':') ? sock.user.id.split(':')[0] + '@s.whatsapp.net' : sock.user.id;
-        if (!targets.includes(botTarget)) targets.push(botTarget);
+        if (!targets.includes(botId)) targets.push(botId);
+        // Also check if the other person in the PM is AFK (in case the owner is chatting with them)
+        const pmPartner = decodeJid(remoteJid);
+        if (!targets.includes(pmPartner)) targets.push(pmPartner);
     }
 
     for (const target of targets) {
         if (afkUsers.has(target)) {
             const data = afkUsers.get(target);
-            await sock.sendMessage(msg.key.remoteJid, { text: `Maaf, orang yang kamu hubungi sedang AFK.\nAlasan: ${data.reason}`, mentions: [target] }, { quoted: msg });
+            await sock.sendMessage(remoteJid, { text: `Maaf, orang yang kamu hubungi sedang AFK.\nAlasan: ${data.reason}`, mentions: [target] }, { quoted: msg });
         }
     }
     // --- END AFK LOGIC ---
