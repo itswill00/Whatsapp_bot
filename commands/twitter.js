@@ -22,10 +22,10 @@ export default {
             filePath = fp;
             const buffer = fs.readFileSync(filePath);
 
-            let caption = `*Twitter / X*`;
+            let caption = `*Twitter*`;
             if (meta) {
-                if (meta.uploader) caption += ` · @${meta.uploader}`;
-                if (meta.title)    caption += `\n_${meta.title.slice(0, 100)}${meta.title.length > 100 ? '…' : ''}_`;
+                if (meta.uploader) caption += ` · @${meta.uploader.replace(/\s+/g, '')}`;
+                if (meta.title)    caption += `\n_${meta.title.slice(0, 80)}${meta.title.length > 80 ? '…' : ''}_`;
             }
 
             await sock.sendMessage(remoteJid, { video: buffer, mimetype: 'video/mp4', caption }, { quoted: msg });

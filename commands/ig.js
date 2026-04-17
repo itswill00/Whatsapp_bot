@@ -21,15 +21,34 @@ export default {
         await sock.sendMessage(remoteJid, { text: `_Mengunduh dari Instagram..._` }, { quoted: msg });
 
         let videoUrl = null;
+        let metadata = { username: null, title: null };
         let methodUsed = "";
 
         try {
             // --- STAGE 1: FREE API SPOOFING (Primary) ---
             const providers = [
-                { name: "SonzaiX", url: `https://api.sonzaix.indevs.in/sosmed/instagram?url=${encodeURIComponent(url)}`, parser: (res) => res?.data?.video_url },
-                { name: "Widipe",  url: `https://widipe.com/download/igdl?url=${encodeURIComponent(url)}`, parser: (res) => res?.data?.result?.[0]?.url || res?.data?.result?.[0] },
-                { name: "Alya",    url: `https://api.alyaserver.my.id/api/download/igdl?url=${encodeURIComponent(url)}`, parser: (res) => res?.data?.data?.[0]?.url || res?.data?.data?.[0] },
-                { name: "Siputzx", url: `https://api.siputzx.my.id/api/d/igdl?url=${encodeURIComponent(url)}`, parser: (res) => res?.data?.data?.[0]?.url || res?.data?.data?.[0] }
+                { 
+                    name: "SonzaiX", 
+                    url: `https://api.sonzaix.indevs.in/sosmed/instagram?url=${encodeURIComponent(url)}`, 
+                    parser: (res) => {
+                        if (res?.data?.video_url) {
+                            metadata.username = res.data.username || res.data.nickname;
+                            metadata.title = res.data.description;
+                            return res.data.video_url;
+                        }
+                        return null;
+                    }
+                },
+                { 
+                    name: "Widipe",  
+                    url: `https://widipe.com/download/igdl?url=${encodeURIComponent(url)}`, 
+                    parser: (res) => res?.data?.result?.[0]?.url || res?.data?.result?.[0] 
+                },
+                { 
+                    name: "Alya",    
+                    url: `https://api.alyaserver.my.id/api/download/igdl?url=${encodeURIComponent(url)}`, 
+                    parser: (res) => res?.data?.data?.[0]?.url || res?.data?.data?.[0] 
+                }
             ];
 
             for (const provider of providers) {
@@ -60,6 +79,8 @@ export default {
                     
                     if (items && items.length > 0) {
                         videoUrl = items[0].videoUrl || items[0].url || items[0].displayUrl;
+                        metadata.username = items[0].ownerUsername || items[0].ownerFullName;
+                        metadata.title = items[0].caption;
                         methodUsed = "Apify Engine";
                     }
                 } catch (e) {
@@ -67,11 +88,16 @@ export default {
                 }
             }
 
-            if (!videoUrl) throw new Error("Semua pengunduh gagal memproses link ini. Mungkin konten privat atau API sedang down.");
+            if (!videoUrl) throw new Error("Semua pengunduh gagal memproses link ini.");
+
+            // Formatting Compact Caption
+            const postAuthor = metadata.username ? ` · @${metadata.username}` : '';
+            const postDesc = metadata.title ? `\n_${metadata.title.slice(0, 80)}${metadata.title.length > 80 ? '…' : ''}_` : '';
+            const caption = `*Instagram*${postAuthor}${postDesc}`;
 
             await sock.sendMessage(remoteJid, { 
                 video: { url: videoUrl }, 
-                caption: `*Instagram*\n_Berhasil diunduh via ${methodUsed}_`,
+                caption: caption,
                 mimetype: 'video/mp4'
             }, { quoted: msg });
 
