@@ -40,18 +40,6 @@ export async function loadCommands() {
 }
 
 /**
- * Helper to normalize JIDs by removing Multi-Device suffixes (e.g., :1 or .0:1)
- */
-function decodeJid(jid) {
-    if (!jid) return jid;
-    if (/:\d+@/gi.test(jid)) {
-        const decode = jid.split(':');
-        return `${decode[0]}@${decode[1].split('@')[1]}`;
-    }
-    return jid;
-}
-
-/**
  * Main message handler to be attached to connection updates
  */
 export async function messageHandler(sock, msg) {
