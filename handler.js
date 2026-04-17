@@ -59,7 +59,11 @@ export async function messageHandler(sock, msg) {
         await sock.sendMessage(remoteJid, { text: `Selamat datang kembali. Mode AFK dimatikan (Aktif selama ${duration} detik).`, mentions: [sender] });
     }
 
-    if (sender === configOwner && afkUsers.has(botId)) {
+    const isOwner = Array.isArray(config.ownerNumber)
+        ? config.ownerNumber.map(n => decodeJid(n)).includes(sender)
+        : decodeJid(config.ownerNumber) === sender;
+
+    if (isOwner && afkUsers.has(botId)) {
         const data = afkUsers.get(botId);
         const duration = Math.round((Date.now() - data.time) / 1000);
         afkUsers.delete(botId);

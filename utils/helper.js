@@ -5,6 +5,8 @@ export function decodeJid(jid) {
     if (!jid) return jid;
     if (typeof jid !== 'string') return jid;
     const cleaned = jid.includes('@') ? jid.trim().replace(/:.*@/, '@').replace(/\.0@/, '@') : jid.trim();
+    // Preserve @lid or force @s.whatsapp.net for standard numbers
+    if (cleaned.endsWith('@lid')) return cleaned;
     return cleaned.replace('@c.us', '@s.whatsapp.net');
 }
 

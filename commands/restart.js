@@ -12,13 +12,12 @@ export default {
     description: "Restart bot (Hanya Owner)",
     execute: async (sock, msg, args) => {
         const sender = decodeJid(msg.key.participant || msg.key.remoteJid);
-        const configOwner = decodeJid(config.ownerNumber);
+        const isOwner = Array.isArray(config.ownerNumber) 
+            ? config.ownerNumber.map(n => decodeJid(n)).includes(sender)
+            : decodeJid(config.ownerNumber) === sender;
 
-        // Internal Debug Log
-        console.log(`[Auth Check] Sender: ${sender} | Owner: ${configOwner}`);
-
-        if (sender !== configOwner) {
-            return await sock.sendMessage(msg.key.remoteJid, { text: `Maaf, akses ditolak.\n\nID Kamu: ${sender}\nID Owner: ${configOwner}\n\nPastikan nomor di config.js sudah benar-benar sama.` }, { quoted: msg });
+        if (!isOwner) {
+            return await sock.sendMessage(msg.key.remoteJid, { text: `Maaf, akses ditolak.\n\nID Kamu: ${sender}\nID Owner: ${JSON.stringify(config.ownerNumber)}\n\nPastikan nomor di config.js sudah benar-benar sama.` }, { quoted: msg });
         } 
 
         // Save reboot state
