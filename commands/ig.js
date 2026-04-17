@@ -15,33 +15,53 @@ export default {
         const url = args[0];
         await sock.sendMessage(remoteJid, { text: `_Mengunduh dari Instagram..._` }, { quoted: msg });
 
+        const providers = [
+            {
+                name: "Widipe",
+                url: `https://widipe.com/download/igdl?url=${encodeURIComponent(url)}`,
+                parser: (res) => res?.data?.result?.[0]?.url || res?.data?.result?.[0]
+            },
+            {
+                name: "Alya",
+                url: `https://api.alyaserver.my.id/api/download/igdl?url=${encodeURIComponent(url)}`,
+                parser: (res) => res?.data?.data?.[0]?.url || res?.data?.data?.[0]
+            },
+            {
+                name: "Ryzendesu",
+                url: `https://api.ryzendesu.vip/api/downloader/igdl?url=${encodeURIComponent(url)}`,
+                parser: (res) => res?.data?.result?.[0]?.url || res?.data?.result?.[0]
+            },
+            {
+                name: "Siputzx",
+                url: `https://api.siputzx.my.id/api/d/igdl?url=${encodeURIComponent(url)}`,
+                parser: (res) => res?.data?.data?.[0]?.url || res?.data?.data?.[0]
+            }
+        ];
+
+        let videoUrl = null;
+        let lastError = "Semua provider gagal mengembalikan data.";
+
         try {
-            // Mencoba API Publik yang sering aktif di komunitas WA Bot ID
-            // API Ke-1: Widipe
-            let apiUrl = `https://widipe.com/download/igdl?url=${encodeURIComponent(url)}`;
-            let response = await axios.get(apiUrl, { timeout: 15000 }).catch(() => null);
-            let mediaData = response?.data?.result;
-
-            if (!mediaData || mediaData.length === 0) {
-                // API Ke-2 Fallback: SIPUTZX
-                apiUrl = `https://api.siputzx.my.id/api/d/igdl?url=${encodeURIComponent(url)}`;
-                response = await axios.get(apiUrl, { timeout: 15000 }).catch(() => null);
-                mediaData = response?.data?.data; // Siputzx biasanya mengembalikan `data` array
+            for (const provider of providers) {
+                try {
+                    console.log(`[IG] Mencoba provider: ${provider.name}`);
+                    const response = await axios.get(provider.url, { timeout: 10000 });
+                    const result = provider.parser(response);
+                    
+                    if (result && typeof result === 'string' && result.startsWith('http')) {
+                        videoUrl = result;
+                        console.log(`[IG] Berhasil menggunakan provider: ${provider.name}`);
+                        break;
+                    }
+                } catch (e) {
+                    console.error(`[IG] Provider ${provider.name} gagal:`, e.message);
+                }
             }
 
-            if (!mediaData || mediaData.length === 0) {
-                throw new Error("Semua API Spoofing sedang down atau Rate Limited.");
-            }
+            if (!videoUrl) throw new Error(lastError);
 
-            // Ambil URL resolusi tertinggi dari array result (biasanya index pertama)
-            // Format respon berbeda-beda tiap API, kita ambil item URL nya
-            let videoUrl = typeof mediaData[0] === 'string' ? mediaData[0] : (mediaData[0].url || mediaData[0]);
+            const caption = `*Instagram*\n_Berhasil diekstrak via provider cadangan_`;
 
-            if (!videoUrl) throw new Error("Gagal mengambil media direct link dari JSON response.");
-
-            const caption = `*Instagram*\n_Berhasil diekstrak via Cloud API_`;
-
-            // Mimetype otomatis di-handle WhatsApp jika dikirim sebagai dokumen/video URL
             await sock.sendMessage(remoteJid, { 
                 video: { url: videoUrl }, 
                 caption: caption,
@@ -51,7 +71,7 @@ export default {
         } catch (err) {
             console.error(`[IG Downloader Error]:`, err.message);
             sock.sendMessage(remoteJid, {
-                text: `Gagal diproses oleh API Pihak Ketiga.\n_Details: ${err.message}_`
+                text: `Gagal diproses.\n_Details: ${err.message}_`
             }, { quoted: msg });
         }
     }
