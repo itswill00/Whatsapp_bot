@@ -25,71 +25,83 @@ export default {
                 { logger: console }
             );
 
-            // Stage 2: Upload to Cloud (Multi-Uploader)
+            // Stage 2: Universal Upload
             const imageUrl = await uploadFile(buffer);
-            console.log(`[HD] Image uploaded to: ${imageUrl}`);
+            console.log(`[HD] Source URL: ${imageUrl}`);
 
-            // Stage 3: Multi-AI Engine Rotation (7 Engines)
+            // Stage 3: Professional AI Engine Chain
             const engines = [
-                { name: "Engine-Alpha", url: `https://api.vreden.my.id/api/remini?url=${encodeURIComponent(imageUrl)}` },
-                { name: "Engine-Beta",  url: `https://api.agatz.xyz/api/remini?url=${encodeURIComponent(imageUrl)}` },
-                { name: "Engine-Gamma", url: `https://api.siputzx.my.id/api/ai/remini?url=${encodeURIComponent(imageUrl)}` },
-                { name: "Engine-Delta", url: `https://widipe.com/remini?url=${encodeURIComponent(imageUrl)}` },
-                { name: "Engine-Zeta",  url: `https://api.lolhuman.xyz/api/remini?apikey=64333e8746c37251145caaa2&img=${encodeURIComponent(imageUrl)}` },
-                { name: "Engine-Omega", url: `https://skizo.tech/api/remini?url=${encodeURIComponent(imageUrl)}&apikey=drshper` },
-                { name: "Engine-Sigma", url: `https://api.alyaserver.my.id/api/remini?url=${encodeURIComponent(imageUrl)}` }
+                { name: "Alpha",    url: `https://api.vreden.web.id/api/remini?url=${encodeURIComponent(imageUrl)}` },
+                { name: "Beta",     url: `https://api.agatz.xyz/api/remini?url=${encodeURIComponent(imageUrl)}` },
+                { name: "Gamma",    url: `https://widipe.com/remini?url=${encodeURIComponent(imageUrl)}` },
+                { name: "Delta",    url: `https://api.siputzx.my.id/api/ai/remini?url=${encodeURIComponent(imageUrl)}` },
+                { name: "Epsilon",  url: `https://skizo.tech/api/remini?url=${encodeURIComponent(imageUrl)}&apikey=drshper` }
             ];
 
-            let finalImage = null;
+            let finalBuffer = null;
             let usedEngine = "";
 
             for (const engine of engines) {
                 try {
-                    console.log(`[HD] Invoking ${engine.name}...`);
+                    console.log(`[HD] Attempting Engine: ${engine.name}...`);
+                    
+                    // Fetch metadata first or fetch whole but with timeout
                     const res = await axios.get(engine.url, { 
-                        timeout: 45000, 
+                        timeout: 50000, 
                         responseType: 'arraybuffer',
                         headers: {
-                            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+                            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                            'Accept': 'image/*, application/json'
                         }
                     });
 
-                    // Verifikasi apakah response adalah gambar yang valid
-                    const contentType = res.headers['content-type'];
-                    if (contentType && contentType.includes('image')) {
-                        finalImage = Buffer.from(res.data);
-                        usedEngine = engine.name;
-                        break;
-                    } 
-                    
-                    // Cek jika response adalah JSON berisi URL (Beberapa API me-return JSON)
-                    if (contentType && contentType.includes('json')) {
-                        const json = JSON.parse(res.data.toString());
-                        const nestedUrl = json.url || json.result || (json.data && json.data.url);
-                        if (nestedUrl) {
-                            const imgRes = await axios.get(nestedUrl, { timeout: 30000, responseType: 'arraybuffer' });
-                            finalImage = Buffer.from(imgRes.data);
+                    const contentType = res.headers['content-type'] || "";
+
+                    // Case A: Server returns binary image data
+                    if (contentType.includes('image')) {
+                        if (res.data.length > 1000) { // Safety check
+                            finalBuffer = Buffer.from(res.data);
                             usedEngine = engine.name;
                             break;
                         }
                     }
+
+                    // Case B: Server returns JSON with a result URL
+                    if (contentType.includes('json') || contentType.includes('text')) {
+                        const str = res.data.toString();
+                        if (str.startsWith('{')) {
+                            const json = JSON.parse(str);
+                            const resultUrl = json.url || json.result || json.data?.url || (json.status && json.data);
+                            
+                            if (typeof resultUrl === 'string' && resultUrl.startsWith('http')) {
+                                console.log(`[HD] ${engine.name} returned JSON URL: ${resultUrl}`);
+                                const imgRes = await axios.get(resultUrl, { timeout: 30000, responseType: 'arraybuffer' });
+                                if (imgRes.status === 200) {
+                                    finalBuffer = Buffer.from(imgRes.data);
+                                    usedEngine = engine.name;
+                                    break;
+                                }
+                            }
+                        }
+                    }
                 } catch (e) {
-                    console.error(`[HD] ${engine.name} Error: ${e.message}`);
+                    console.error(`[HD] Engine ${engine.name} Error: ${e.message}`);
+                    continue;
                 }
             }
 
-            if (!finalImage) {
-                throw new Error("Sistem AI sedang bermasalah di semua server komunitas (404/Timeout).");
-            }
+            if (!finalBuffer) throw new Error("Semua server AI (Alpha-Epsilon) sedang tidak merespon/timeout.");
 
             await sock.sendMessage(remoteJid, { 
-                image: finalImage, 
-                caption: `*AI Image Enhancer*\n_Berhasil diproses via ${usedEngine}_` 
+                image: finalBuffer, 
+                caption: `*AI Image Enhancer (Stabilized)*\n_Berhasil dijernihkan via Server ${usedEngine}_` 
             }, { quoted: msg });
 
         } catch (error) {
-            console.error("[HD Final Error]:", error.message);
-            sock.sendMessage(remoteJid, { text: `❌ Gagal memproses gambar.\n_Details: ${error.message}_` }, { quoted: msg });
+            console.error("[HD Ultimate Error]:", error.message);
+            // Final User-Friendly advice
+            const helpMsg = `❌ Gagal memproses gambar.\n\n_Details: ${error.message}_\n\n*Saran:* Coba lagi secara berkala atau gunakan gambar dengan ukuran di bawah 2MB. Server komunitas sering mengalami traffik tinggi.`;
+            sock.sendMessage(remoteJid, { text: helpMsg }, { quoted: msg });
         }
     }
 };
