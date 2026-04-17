@@ -12,10 +12,11 @@ export default {
         // Default target is the person running the command
         let targetAfkId = sender;
 
-        // If the owner runs it in PM, they mean "Turn the BOT into AFK mode for anyone chatting with the bot"
-        const configOwner = decodeJid(config.ownerNumber);
+        const isOwner = Array.isArray(config.ownerNumber) 
+            ? config.ownerNumber.map(n => decodeJid(n)).includes(sender)
+            : decodeJid(config.ownerNumber) === sender;
 
-        if (!isGroup && sender === configOwner) {
+        if (!isGroup && isOwner) {
             targetAfkId = decodeJid(sock.user?.id);
         }
 

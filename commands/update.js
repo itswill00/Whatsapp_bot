@@ -17,7 +17,7 @@ export default {
             : decodeJid(config.ownerNumber) === sender;
 
         if (!isOwner) {
-            return await sock.sendMessage(msg.key.remoteJid, { text: `Maaf, akses ditolak.\n\nID Kamu: ${sender}\nID Owner: ${JSON.stringify(config.ownerNumber)}\n\nPastikan nomor di config.js sudah benar-benar sama.` }, { quoted: msg });
+            return await sock.sendMessage(msg.key.remoteJid, { text: "Maaf, akses ditolak. Perintah ini khusus untuk Owner bot." }, { quoted: msg });
         }
 
         await sock.sendMessage(msg.key.remoteJid, { text: "Sedang mengunduh update dari GitHub..." }, { quoted: msg });

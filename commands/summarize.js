@@ -1,6 +1,7 @@
 import Groq from 'groq-sdk';
 import config from '../config.js';
 import { messageHistory } from '../utils/messageHistory.js';
+import { decodeJid } from '../utils/helper.js';
 
 let groq;
 
@@ -8,24 +9,25 @@ export default {
     name: "summarize",
     description: "Merangkum diskusi terakhir di grup menggunakan AI (Pesan terakhir).",
     execute: async (sock, msg, args) => {
-        const isGroup = msg.key.remoteJid.endsWith('@g.us');
+        const remoteJid = msg.key.remoteJid;
+        const isGroup = remoteJid.endsWith('@g.us');
+        
         if (!isGroup) {
-            return await sock.sendMessage(msg.key.remoteJid, { text: "Perintah ini hanya bisa digunakan di dalam Grup." }, { quoted: msg });
+            return await sock.sendMessage(remoteJid, { text: "Perintah ini hanya bisa digunakan di dalam Grup." }, { quoted: msg });
         }
 
         if (!config.groqApiKey) {
-            return await sock.sendMessage(msg.key.remoteJid, { text: "Gagal: API Key Groq belum diatur." }, { quoted: msg });
+            return await sock.sendMessage(remoteJid, { text: "Gagal: API Key Groq belum diatur dalam config.js." }, { quoted: msg });
         }
 
-        const history = messageHistory.get(msg.key.remoteJid);
+        const history = messageHistory.get(remoteJid);
         
         if (history.length < 5) {
-            return await sock.sendMessage(msg.key.remoteJid, { text: "Data pembicaraan belum cukup. Biarkan obrolan mengalir lebih banyak sebelum dirangkum." }, { quoted: msg });
+            return await sock.sendMessage(remoteJid, { text: "Data pembicaraan belum cukup untuk dirangkum (Minimal 5 pesan)." }, { quoted: msg });
         }
 
-        await sock.sendMessage(msg.key.remoteJid, { react: { text: "📝", key: msg.key } });
+        await sock.sendMessage(remoteJid, { react: { text: "📝", key: msg.key } });
 
-        // Build the transcript for AI
         const transcript = history.map(h => `${h.name}: ${h.text}`).join('\n');
 
         if (!groq) groq = new Groq({ apiKey: config.groqApiKey });
@@ -35,7 +37,7 @@ export default {
                 messages: [
                     { 
                         role: "system", 
-                        content: "Nama kamu adalah Wil-AI. Kamu adalah asisten ringkasan diskusi grup. Tugas kamu adalah merangkum obrolan berikut dalam poin-per-poin singkat, padat, dan profesional. Gunakan Bahasa Indonesia yang natural. Pastikan informasi penting seperti keputusan atau pertanyaan yang belum terjawab tetap ada. Jangan gunakan emoji berlebihan. Gaya bicara: Humanis-Minimalis." 
+                        content: "Nama kamu adalah Wil-AI, asisten senior yang profesional. Tugas kamu adalah merangkum obrolan grup berikut dalam poin-per-poin singkat dan bermakna. Gunakan Bahasa Indonesia. Fokus pada keputusan atau inti masalah. Gaya bicara: Humanis-Minimalis. Jangan gunakan emoji berlebihan." 
                     },
                     { 
                         role: "user", 
@@ -46,14 +48,12 @@ export default {
             });
 
             const summary = response.choices[0]?.message?.content || "Maaf, Wil-AI gagal merangkum diskusi saat ini.";
-            
             const finalOutput = `Rangkuman Diskusi Terakhir\n\n${summary}`;
-
-            await sock.sendMessage(msg.key.remoteJid, { text: finalOutput }, { quoted: msg });
+            await sock.sendMessage(remoteJid, { text: finalOutput }, { quoted: msg });
 
         } catch (error) {
             console.error("[Summarize Error]:", error);
-            await sock.sendMessage(msg.key.remoteJid, { text: "Terjadi kesalahan teknis saat mencoba merangkum diskusi." }, { quoted: msg });
+            await sock.sendMessage(remoteJid, { text: "Terjadi kesalahan teknis saat menghubungi AI." }, { quoted: msg });
         }
     }
 };
