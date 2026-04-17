@@ -8,6 +8,9 @@ A project focused on high-performance, modular WhatsApp automation built on top 
 - **Provider Fallback**: High-reliability media downloader with multi-stage API fallback logic.
 - **AI Integration**: Native support for Groq Llama-3 (Text & Vision).
 
+## Command Reference
+For a complete list of commands, syntax, and usage examples, please refer to the [Command Reference Guide](COMMANDS.md).
+
 ## Prerequisites
 - Node.js (v18.x or later)
 - Git
