@@ -48,7 +48,12 @@ export default {
             });
 
             const summary = response.choices[0]?.message?.content || "Maaf, Wil-AI gagal merangkum diskusi saat ini.";
-            const finalOutput = `Rangkuman Diskusi Terakhir\n\n${summary}`;
+            const finalOutput = `*CONVERSATION DIGEST* | _Group Briefing_\n` +
+                                `──────────────────────\n\n` +
+                                `${summary}\n\n` +
+                                `──────────────────────\n` +
+                                `_Source: Last ${history.length} messages_`;
+                                
             await sock.sendMessage(remoteJid, { text: finalOutput }, { quoted: msg });
 
         } catch (error) {

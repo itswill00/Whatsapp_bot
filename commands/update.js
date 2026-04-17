@@ -12,6 +12,8 @@ export default {
     name: "update",
     description: "Update bot dari GitHub (Hanya Owner)",
     execute: async (sock, msg, args) => {
+        const rawSender = msg.key.participant || msg.key.remoteJid;
+        const sender = decodeJid(rawSender);
         const isOwner = Array.isArray(config.ownerNumber) 
             ? config.ownerNumber.map(n => decodeJid(n)).includes(sender)
             : decodeJid(config.ownerNumber) === sender;
@@ -20,7 +22,11 @@ export default {
             return await sock.sendMessage(msg.key.remoteJid, { text: "Maaf, akses ditolak. Perintah ini khusus untuk Owner bot." }, { quoted: msg });
         }
 
-        await sock.sendMessage(msg.key.remoteJid, { text: "Sedang mengunduh update dari GitHub..." }, { quoted: msg });
+        await sock.sendMessage(msg.key.remoteJid, { 
+            text: `*SYSTEM* | _Update Sync_\n` +
+                  `──────────────\n` +
+                  `Sedang mengunduh update dari GitHub...`
+        }, { quoted: msg });
 
         exec('git pull origin main', async (err, stdout, stderr) => {
             if (err) {
@@ -39,7 +45,11 @@ export default {
             }
             fs.writeFileSync(rebootPath, JSON.stringify({ jid: msg.key.remoteJid, type: 'update' }));
 
-            await sock.sendMessage(msg.key.remoteJid, { text: "Update berhasil diunduh. Bot akan restart otomatis untuk menerapkan perubahan." }, { quoted: msg });
+            await sock.sendMessage(msg.key.remoteJid, { 
+                text: `*SYSTEM* | _Update Complete_\n` +
+                      `──────────────\n` +
+                      `Update berhasil diunduh. Bot akan restart otomatis untuk menerapkan perubahan.`
+            }, { quoted: msg });
             
             setTimeout(() => {
                 process.exit(1);

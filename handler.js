@@ -56,7 +56,10 @@ export async function messageHandler(sock, msg) {
         const data = afkUsers.get(sender);
         const duration = Math.round((Date.now() - data.time) / 1000); 
         afkUsers.delete(sender);
-        await sock.sendMessage(remoteJid, { text: `Selamat datang kembali. Mode AFK dimatikan (Aktif selama ${duration} detik).`, mentions: [sender] });
+        const statusMsg = `*STATUS* | _Back Online_\n` +
+                          `• User   : @${sender.split('@')[0]}\n` +
+                          `• Session: ${duration}s`;
+        await sock.sendMessage(remoteJid, { text: statusMsg, mentions: [sender] });
     }
 
     const isOwner = Array.isArray(config.ownerNumber)
@@ -67,7 +70,10 @@ export async function messageHandler(sock, msg) {
         const data = afkUsers.get(botId);
         const duration = Math.round((Date.now() - data.time) / 1000);
         afkUsers.delete(botId);
-        await sock.sendMessage(remoteJid, { text: `Mode AFK Global dimatikan. Bot sudah tidak dalam kondisi istirahat (Lama AFK: ${duration} detik).` });
+        const statusMsg = `*STATUS* | _System Restored_\n` +
+                          `• Logic   : Active\n` +
+                          `• Session : ${duration}s`;
+        await sock.sendMessage(remoteJid, { text: statusMsg });
     }
 
     // 2. Prevent processing messages from the bot itself for other logic (Anti-ViewOnce, AFK reply)
@@ -96,7 +102,11 @@ export async function messageHandler(sock, msg) {
     for (const target of targets) {
         if (afkUsers.has(target)) {
             const data = afkUsers.get(target);
-            await sock.sendMessage(remoteJid, { text: `Maaf, orang yang kamu hubungi sedang AFK.\nAlasan: ${data.reason}`, mentions: [target] }, { quoted: msg });
+            const noticeMsg = `*NOTICE* | _User is Offline_\n` +
+                              `──────────────\n` +
+                              `@${target.split('@')[0]} sedang AFK.\n` +
+                              `Reason: ${data.reason}`;
+            await sock.sendMessage(remoteJid, { text: noticeMsg, mentions: [target] }, { quoted: msg });
         }
     }
     // --- END AFK LOGIC ---

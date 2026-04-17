@@ -23,13 +23,13 @@ export default {
             const isp = result.isp || "Unknown";
             const server = result.server.location || "Unknown";
 
-            const output = `*NETWORK PERFORMANCE REPORT*\n` +
-                           `_Provider: ${isp}_\n` +
-                           `_Server: ${server}_\n\n` +
-                           `🚀 *Download:* ${download} Mbps\n` +
-                           `📤 *Upload:* ${upload} Mbps\n` +
-                           `⏳ *Ping:* ${ping} ms (Jitter: ${jitter}ms)\n\n` +
-                           `_Status: Connection established._`;
+            const output = `*NETWORK AUDIT* | _Performance Status_\n` +
+                           `──────────────────────\n` +
+                           `• Download : ${download} Mbps\n` +
+                           `• Upload   : ${upload} Mbps\n` +
+                           `• Latency  : ${ping} ms (${jitter}ms)\n` +
+                           `──────────────────────\n` +
+                           `_Node: ${isp} / ${server}_`;
 
             await sock.sendMessage(remoteJid, { text: output }, { quoted: msg });
 

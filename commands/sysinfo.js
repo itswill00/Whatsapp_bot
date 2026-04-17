@@ -41,28 +41,23 @@ export default {
         const nodeMemUsage = process.memoryUsage();
         
         // Build Human-Minimalist UI
-        const text = `Informasi Diagnostik Sistem
-        
-Hosting & OS
-Platform: ${os.type()} (${os.arch()})
-Waktu Aktif Server: ${serverUptime}
-
-Processor (CPU)
-Model: ${cpuModel}
-Cores: ${cpuCores}
-
-Memory (RAM)
-Total: ${formatBytes(totalMem)}
-Terpakai: ${formatBytes(usedMem)} (${memUsagePercent}%)
-Tersedia: ${formatBytes(freeMem)}
-
-Bot Runtime (Node.js)
-Versi: ${process.version}
-Waktu Aktif Bot: ${processUptime}
-Pemakaian RAM: ${formatBytes(nodeMemUsage.rss)}
-
-Metrik
-Jumlah Command: ${commands ? commands.size : '0'}`;
+        const text = `*RESOURCE AUDIT* | _Server Diagnostics_\n` +
+                     `──────────────────────\n\n` +
+                     `┌─ *HOSTING & OS*\n` +
+                     `├ Plat : ${os.type()} (${os.arch()})\n` +
+                     `└ Up   : ${serverUptime}\n\n` +
+                     `┌─ *PROCESSOR*\n` +
+                     `├ Model: ${cpuModel.slice(0, 30)}...\n` +
+                     `└ Cores: ${cpuCores}\n\n` +
+                     `┌─ *MEMORY*\n` +
+                     `├ Total: ${formatBytes(totalMem)}\n` +
+                     `└ Usage: ${memUsagePercent}%\n\n` +
+                     `┌─ *RUNTIME*\n` +
+                     `├ Node : ${process.version}\n` +
+                     `├ Up   : ${processUptime}\n` +
+                     `└ RSS  : ${formatBytes(nodeMemUsage.rss)}\n\n` +
+                     `──────────────────────\n` +
+                     `_Status: System Optimal_`;
 
         await sock.sendMessage(msg.key.remoteJid, { text: text }, { quoted: msg });
     }

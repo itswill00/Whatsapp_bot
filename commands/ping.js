@@ -6,8 +6,10 @@ export default {
         const timestamp = (msg.messageTimestamp.low || msg.messageTimestamp);
         const latency = start - (timestamp * 1000);
         
-        await sock.sendMessage(msg.key.remoteJid, { 
-            text: `*PONG!* 🏓\n_Speed: ${latency}ms_` 
-        }, { quoted: msg });
+        const output = `*PING* | _System Latency_\n` +
+                       `• Response : ${latency}ms\n` +
+                       `• Status   : Stable`;
+
+        await sock.sendMessage(msg.key.remoteJid, { text: output }, { quoted: msg });
     }
 };
