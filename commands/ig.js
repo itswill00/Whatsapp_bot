@@ -40,8 +40,12 @@ export default {
 
         } catch (err) {
             console.error(`[IG Downloader Error]:`, err.message);
+            
+            // Format rincian error teknis yang compact
+            const errorSnippet = err.message.slice(0, 150).replace(/\n/g, ' ');
+            
             sock.sendMessage(remoteJid, {
-                text: `Gagal mengunduh URL Instagram yang diberikan.\n_Pastikan akun publik dan link valid. Terkadang perlu retry karena blokir IG VPS._`
+                text: `Gagal diproses oleh engine.\n_Details: ${errorSnippet}_`
             }, { quoted: msg });
         } finally {
             if (filePath && fs.existsSync(filePath)) fs.unlinkSync(filePath);
