@@ -12,7 +12,7 @@ export default {
 
         // Logically group commands for better UX
         const categories = {
-            "SYSTEM": ["restart", "update", "ping", "sysinfo"],
+            "SYSTEM": ["restart", "update", "speedtest", "ping", "sysinfo"],
             "AI & MEDIA": ["ai", "summarize", "play", "tiktok"],
             "UTILITY": ["afk", "sticker", "remindme"],
             "GROUP ADMIN": ["kick", "promote", "demote", "hidetag"]
