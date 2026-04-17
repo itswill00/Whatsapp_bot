@@ -47,13 +47,8 @@ export default {
                 model: "llama-3.3-70b-versatile",
             });
 
-            const summary = response.choices[0]?.message?.content || "Maaf, Wil-AI gagal merangkum diskusi saat ini.";
-            const finalOutput = `*CONVERSATION DIGEST* | _Group Briefing_\n` +
-                                `──────────────────────\n\n` +
-                                `${summary}\n\n` +
-                                `──────────────────────\n` +
-                                `_Source: Last ${history.length} messages_`;
-                                
+            const summary = response.choices[0]?.message?.content || "Wil-AI gagal merangkum diskusi.";
+            const finalOutput = `*Ringkasan Diskusi*\n\n${summary}\n\n_${history.length} pesan terakhir_`;
             await sock.sendMessage(remoteJid, { text: finalOutput }, { quoted: msg });
 
         } catch (error) {

@@ -22,11 +22,7 @@ export default {
             return await sock.sendMessage(msg.key.remoteJid, { text: "Maaf, akses ditolak. Perintah ini khusus untuk Owner bot." }, { quoted: msg });
         }
 
-        await sock.sendMessage(msg.key.remoteJid, { 
-            text: `*SYSTEM* | _Update Sync_\n` +
-                  `──────────────\n` +
-                  `Sedang mengunduh update dari GitHub...`
-        }, { quoted: msg });
+        await sock.sendMessage(msg.key.remoteJid, { text: "_Menarik update dari GitHub..._" }, { quoted: msg });
 
         exec('git pull origin main', async (err, stdout, stderr) => {
             if (err) {
@@ -45,11 +41,7 @@ export default {
             }
             fs.writeFileSync(rebootPath, JSON.stringify({ jid: msg.key.remoteJid, type: 'update' }));
 
-            await sock.sendMessage(msg.key.remoteJid, { 
-                text: `*SYSTEM* | _Update Complete_\n` +
-                      `──────────────\n` +
-                      `Update berhasil diunduh. Bot akan restart otomatis untuk menerapkan perubahan.`
-            }, { quoted: msg });
+            await sock.sendMessage(msg.key.remoteJid, { text: "_Update selesai. Bot akan restart._" }, { quoted: msg });
             
             setTimeout(() => {
                 process.exit(1);

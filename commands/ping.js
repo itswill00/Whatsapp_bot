@@ -1,15 +1,12 @@
 export default {
     name: "ping",
-    description: "Check bot latency or if the bot is alive",
+    description: "Cek latensi bot",
     execute: async (sock, msg, args) => {
-        const start = Date.now();
         const timestamp = (msg.messageTimestamp.low || msg.messageTimestamp);
-        const latency = start - (timestamp * 1000);
-        
-        const output = `*PING* | _System Latency_\n` +
-                       `• Response : ${latency}ms\n` +
-                       `• Status   : Stable`;
+        const latency = Date.now() - (timestamp * 1000);
 
-        await sock.sendMessage(msg.key.remoteJid, { text: output }, { quoted: msg });
+        await sock.sendMessage(msg.key.remoteJid, { 
+            text: `Pong — ${latency}ms` 
+        }, { quoted: msg });
     }
 };

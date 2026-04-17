@@ -54,12 +54,12 @@ export async function messageHandler(sock, msg) {
 
     if (afkUsers.has(sender)) {
         const data = afkUsers.get(sender);
-        const duration = Math.round((Date.now() - data.time) / 1000); 
+        const mins = Math.round((Date.now() - data.time) / 60000);
         afkUsers.delete(sender);
-        const statusMsg = `*STATUS* | _Back Online_\n` +
-                          `• User   : @${sender.split('@')[0]}\n` +
-                          `• Session: ${duration}s`;
-        await sock.sendMessage(remoteJid, { text: statusMsg, mentions: [sender] });
+        await sock.sendMessage(remoteJid, {
+            text: `Selamat datang kembali — AFK ${mins > 0 ? mins + ' menit' : 'baru saja'}.`,
+            mentions: [sender]
+        });
     }
 
     const isOwner = Array.isArray(config.ownerNumber)
@@ -68,12 +68,8 @@ export async function messageHandler(sock, msg) {
 
     if (isOwner && afkUsers.has(botId)) {
         const data = afkUsers.get(botId);
-        const duration = Math.round((Date.now() - data.time) / 1000);
         afkUsers.delete(botId);
-        const statusMsg = `*STATUS* | _System Restored_\n` +
-                          `• Logic   : Active\n` +
-                          `• Session : ${duration}s`;
-        await sock.sendMessage(remoteJid, { text: statusMsg });
+        await sock.sendMessage(remoteJid, { text: "Bot kembali online." });
     }
 
     // 2. Prevent processing messages from the bot itself for other logic (Anti-ViewOnce, AFK reply)
@@ -102,11 +98,10 @@ export async function messageHandler(sock, msg) {
     for (const target of targets) {
         if (afkUsers.has(target)) {
             const data = afkUsers.get(target);
-            const noticeMsg = `*NOTICE* | _User is Offline_\n` +
-                              `──────────────\n` +
-                              `@${target.split('@')[0]} sedang AFK.\n` +
-                              `Reason: ${data.reason}`;
-            await sock.sendMessage(remoteJid, { text: noticeMsg, mentions: [target] }, { quoted: msg });
+            await sock.sendMessage(remoteJid, {
+                text: `@${target.split('@')[0]} sedang AFK — _${data.reason}_`,
+                mentions: [target]
+            }, { quoted: msg });
         }
     }
     // --- END AFK LOGIC ---

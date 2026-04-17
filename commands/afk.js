@@ -24,10 +24,8 @@ export default {
         
         afkUsers.set(targetAfkId, { reason, time: Date.now() });
         
-        const output = `*STATUS* | _Away From Keyboard_\n` +
-                       `• User   : @${targetAfkId.split('@')[0]}\n` +
-                       `• Reason : ${reason}`;
-        
+        const output = `AFK aktif — _${reason}_`;
+
         await sock.sendMessage(msg.key.remoteJid, { text: output, mentions: [targetAfkId] }, { quoted: msg });
     }
 };

@@ -27,11 +27,7 @@ export default {
         }
         fs.writeFileSync(rebootPath, JSON.stringify({ jid: msg.key.remoteJid, type: 'restart' }));
 
-        await sock.sendMessage(msg.key.remoteJid, { 
-            text: `*SYSTEM* | _Reboot Initialized_\n` +
-                  `──────────────\n` +
-                  `Proses restart dimulai. Tunggu sebentar sampai bot aktif kembali.`
-        }, { quoted: msg });
+        await sock.sendMessage(msg.key.remoteJid, { text: "_Restart dimulai. Bot akan kembali sebentar lagi._" }, { quoted: msg });
         
         setTimeout(() => {
             process.exit(1); 

@@ -2,46 +2,34 @@ import speedTest from 'speedtest-net';
 
 export default {
     name: "speedtest",
-    description: "Uji kecepatan internet VPS (Ookla Engine)",
+    description: "Uji kecepatan internet server",
     execute: async (sock, msg, args) => {
         const remoteJid = msg.key.remoteJid;
-        
-        await sock.sendMessage(remoteJid, { text: "_Sedang mengukur performa jaringan... Mohon tunggu._" }, { quoted: msg });
+
+        await sock.sendMessage(remoteJid, { text: "_Mengukur kecepatan jaringan..._" }, { quoted: msg });
 
         try {
-            // Run speedtest with auto-accept license
-            const result = await speedTest({ 
-                acceptLicense: true, 
-                acceptGdpr: true 
-            });
+            const result = await speedTest({ acceptLicense: true, acceptGdpr: true });
 
-            // Convert bandwidth (bytes per second) to Mbps
-            const download = (result.download.bandwidth * 8 / 1000000).toFixed(2);
-            const upload = (result.upload.bandwidth * 8 / 1000000).toFixed(2);
+            const dl = (result.download.bandwidth * 8 / 1_000_000).toFixed(1);
+            const ul = (result.upload.bandwidth * 8 / 1_000_000).toFixed(1);
             const ping = result.ping.latency.toFixed(0);
             const jitter = result.ping.jitter.toFixed(0);
             const isp = result.isp || "Unknown";
-            const server = result.server.location || "Unknown";
+            const loc = result.server.location || "Unknown";
 
-            const output = `*NETWORK AUDIT* | _Performance Status_\n` +
-                           `──────────────────────\n` +
-                           `• Download : ${download} Mbps\n` +
-                           `• Upload   : ${upload} Mbps\n` +
-                           `• Latency  : ${ping} ms (${jitter}ms)\n` +
-                           `──────────────────────\n` +
-                           `_Node: ${isp} / ${server}_`;
+            const out = `*Network Test*\n` +
+                        `Download  ${dl} Mbps\n` +
+                        `Upload    ${ul} Mbps\n` +
+                        `Ping      ${ping} ms  Jitter ${jitter} ms\n` +
+                        `\n` +
+                        `_${isp} — ${loc}_`;
 
-            await sock.sendMessage(remoteJid, { text: output }, { quoted: msg });
+            await sock.sendMessage(remoteJid, { text: out }, { quoted: msg });
 
-        } catch (error) {
-            console.error("[Speedtest Error]:", error);
-            
-            let errorMsg = "Gagal menjalankan speedtest.";
-            if (error.message.includes('not found')) {
-                errorMsg = "Gagal: Library speedtest-net bermasalah atau butuh binary di VPS.";
-            }
-            
-            await sock.sendMessage(remoteJid, { text: errorMsg }, { quoted: msg });
+        } catch (err) {
+            console.error("[Speedtest Error]:", err);
+            await sock.sendMessage(remoteJid, { text: "Speedtest gagal. Cek log server untuk detail." }, { quoted: msg });
         }
     }
 };
