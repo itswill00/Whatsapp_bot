@@ -2,7 +2,8 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import config from './config.js';
-import { extractMessageText } from './utils/helper.js';
+import { extractMessageText, decodeJid } from './utils/helper.js';
+import { messageHistory } from './utils/messageHistory.js';
 import { afkUsers } from './utils/afkData.js';
 import { downloadMediaMessage } from '@whiskeysockets/baileys';
 
@@ -130,6 +131,16 @@ export async function messageHandler(sock, msg) {
     // --- END ANTI VIEW-ONCE ---
 
     const messageText = extractMessageText(msg);
+    if (!messageText) return;
+
+    // --- LOG MESSAGE FOR SUMMARIZER ---
+    // Only log if it's a group and NOT a command
+    if (isGroup && !messageText.startsWith(config.prefix)) {
+        const senderName = msg.pushName || sender.split('@')[0];
+        messageHistory.push(remoteJid, senderName, messageText);
+    }
+    // ----------------------------------
+
     if (!messageText.startsWith(config.prefix)) return;
 
     // Parse the command and arguments
