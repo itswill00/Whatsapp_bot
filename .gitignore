@@ -2,3 +2,7 @@ node_modules/
 auth_info_baileys/
 .env
 config.js
+data/
+temp/
+*.log
+package-lock.json
