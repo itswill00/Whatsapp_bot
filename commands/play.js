@@ -39,17 +39,21 @@ export default {
             const filePath = path.join(tempDir, fileName);
 
             // 3. Eksekusi yt-dlp secara lokal
-            // --ffmpeg-location menggunakan path dari installer npm kita
-            const ytDlpCommand = `yt-dlp -x --audio-format mp3 --audio-quality 0 --ffmpeg-location "${ffmpegInstaller.path}" "${video.url}" -o "${filePath}"`;
+            // Kita hapus --ffmpeg-location karena sudah pakai versi system (apt install)
+            const ytDlpCommand = `yt-dlp -x --audio-format mp3 --audio-quality 0 "${video.url}" -o "${filePath}"`;
 
             exec(ytDlpCommand, async (error, stdout, stderr) => {
                 if (error) {
                     console.error("[yt-dlp Error]:", error);
-                    // Cek jika error dikarenakan yt-dlp belum terinstall di VPS
+                    console.error("[yt-dlp Stderr]:", stderr);
+                    
                     if (error.message.includes('not found')) {
-                        return sock.sendMessage(msg.key.remoteJid, { text: "❌ *Error Teknis:* yt-dlp belum terpasang di VPS. Harap hubungi owner untuk menjalankan perintah instalasi di terminal SSH." }, { quoted: msg });
+                        return sock.sendMessage(msg.key.remoteJid, { text: "❌ *Error Teknis:* yt-dlp belum terpasang di VPS. Harap jalankan perintah instalasi curl yang saya berikan sebelumnya." }, { quoted: msg });
                     }
-                    return sock.sendMessage(msg.key.remoteJid, { text: "❌ Gagal memproses audio. Pastikan link YouTube valid atau coba lagi nanti." }, { quoted: msg });
+                    
+                    // Kirim potongan stderr ke user agar saya bisa bantu debug lebih dalam
+                    const errorSnippet = stderr ? stderr.slice(-150) : error.message.slice(0, 150);
+                    return sock.sendMessage(msg.key.remoteJid, { text: `❌ *Gagal memproses audio.*\n\n*Error Log:* \`\`\`${errorSnippet}\`\`\`` }, { quoted: msg });
                 }
 
                 // 4. Kirim Audio ke WhatsApp
