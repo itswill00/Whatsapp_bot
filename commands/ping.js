@@ -6,7 +6,7 @@ export default {
         const latency = Date.now() - (timestamp * 1000);
 
         await sock.sendMessage(msg.key.remoteJid, { 
-            text: `Pong — ${latency}ms` 
+            text: `Latency: ${latency}ms` 
         }, { quoted: msg });
     }
 };

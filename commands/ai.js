@@ -15,24 +15,21 @@ export default {
             return await sock.sendMessage(msg.key.remoteJid, { text: `Gunakan format: ${config.prefix}ai <pertanyaan>` }, { quoted: msg });
         }
 
-        if (!groq) groq = new Groq({ apiKey: config.groqApiKey });
-
-        const prompt = args.join(" ");
-
         try {
-            const chatCompletion = await groq.chat.completions.create({
+            if (!groq) groq = new Groq({ apiKey: config.groqApiKey });
+
+            const response = await groq.chat.completions.create({
                 messages: [
                     { 
                         role: "system", 
-                        content: "Nama kamu adalah Wil-AI. Kamu adalah asisten teknis yang tenang, cerdas, dan to-the-point. Berikan jawaban yang manusiawi namun efisien. Jangan gunakan emoji berlebihan. Gaya bicara: Senior Software Engineer." 
+                        content: "You are Wil-AI, a technical system architect. Provide concise, accurate, and professional technical assistance. Tone: Senior Engineer. Language: Indonesian (unless context dictates otherwise)." 
                     },
-                    { role: "user", content: prompt }
+                    { role: "user", content: args.join(" ") }
                 ],
                 model: "llama-3.1-8b-instant",
             });
 
-            const reply = chatCompletion.choices[0]?.message?.content || "ERROR: null_response_from_engine";
-            
+            const reply = response.choices[0]?.message?.content || "Error: Empty response.";
             await sock.sendMessage(msg.key.remoteJid, { text: reply }, { quoted: msg });
         } catch (error) {
             console.error("[Groq AI Error]:", error?.message || error);

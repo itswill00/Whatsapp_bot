@@ -14,7 +14,7 @@ export default {
             "Grup":       ["kick", "promote", "demote", "hidetag"]
         };
 
-        let out = `*Wil-AI* — Command Reference\n\n`;
+        let out = `*Wil-AI* — System Command Index\n\n`;
 
         for (const [cat, names] of Object.entries(categories)) {
             const available = names.filter(n => commands.has(n));
@@ -22,12 +22,12 @@ export default {
 
             out += `*${cat}*\n`;
             available.forEach(n => {
-                out += `  ${p}${n}\n`;
+                out += `· ${p}${n}\n`;
             });
             out += `\n`;
         }
 
-        out += `_Prefix: ${p}  |  Ketik perintah untuk memulai_`;
+        out += `_Type a command to begin._`;
 
         await sock.sendMessage(msg.key.remoteJid, { text: out.trim() }, { quoted: msg });
     }

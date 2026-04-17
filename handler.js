@@ -46,9 +46,8 @@ export async function messageHandler(sock, msg) {
     const remoteJid = msg.key.remoteJid;
     const isGroup = remoteJid.endsWith('@g.us');
     const botId = decodeJid(sock.user?.id);
-    const configOwner = decodeJid(config.ownerNumber);
 
-    // --- AFK LOGIC LISTENER ---
+    // AFK Listener
     const rawSender = msg.key.participant || remoteJid;
     const sender = decodeJid(rawSender);
 
@@ -72,25 +71,20 @@ export async function messageHandler(sock, msg) {
         await sock.sendMessage(remoteJid, { text: "Bot kembali online." });
     }
 
-    // 2. Prevent processing messages from the bot itself for other logic (Anti-ViewOnce, AFK reply)
-    // but ALLOW processing if it is a command (Self-chat commands)
     const messageText = extractMessageText(msg);
     const isCommand = messageText && messageText.startsWith(config.prefix);
     
     if (msg.key.fromMe && !isCommand) return;
-    if (!messageText && !msg.key.fromMe) return; // Skip empty non-self messages
+    if (!messageText && !msg.key.fromMe) return;
 
     const mentionedJids = msg.message?.extendedTextMessage?.contextInfo?.mentionedJid || [];
     const quotedJid = msg.message?.extendedTextMessage?.contextInfo?.participant;
     
-    // Build targets and normalize them all
     const targets = mentionedJids.map(jid => decodeJid(jid));
     if (quotedJid) targets.push(decodeJid(quotedJid));
 
-    // In private chat, the bot itself is the implied target
     if (!isGroup) {
         if (!targets.includes(botId)) targets.push(botId);
-        // Also check if the other person in the PM is AFK (in case the owner is chatting with them)
         const pmPartner = decodeJid(remoteJid);
         if (!targets.includes(pmPartner)) targets.push(pmPartner);
     }
@@ -104,23 +98,17 @@ export async function messageHandler(sock, msg) {
             }, { quoted: msg });
         }
     }
-    // --- END AFK LOGIC ---
 
-    // --- ANTI VIEW-ONCE LOGIC ---
+    // Anti View-Once
     let messageType = Object.keys(msg.message || {})[0];
     if (messageType === 'viewOnceMessage' || messageType === 'viewOnceMessageV2' || messageType === 'viewOnceMessageV2Extension') {
         try {
             const innerMsg = msg.message[messageType].message;
-            const mediaType = Object.keys(innerMsg)[0]; // imageMessage or videoMessage
-            
-            // Mock the message envelope so Baileys can download it
-            const mockMsg = {
-                key: msg.key,
-                message: innerMsg
-            };
+            const mediaType = Object.keys(innerMsg)[0];
+            const mockMsg = { key: msg.key, message: innerMsg };
             
             const buffer = await downloadMediaMessage(mockMsg, 'buffer', {}, { logger: console });
-            const caption = "Keamanan: Media View-Once berhasil dicegat dan didekode.";
+            const caption = "Keamanan: Media View-Once telah didekode.";
             
             if (mediaType === 'imageMessage') {
                 await sock.sendMessage(msg.key.remoteJid, { image: buffer, caption: caption }, { quoted: msg });
@@ -128,13 +116,11 @@ export async function messageHandler(sock, msg) {
                 await sock.sendMessage(msg.key.remoteJid, { video: buffer, caption: caption }, { quoted: msg });
             }
         } catch (e) {
-            console.error("[Anti-ViewOnce] Failed to extract VO media:", e);
+            console.error("[System] VO extraction failed:", e.message);
         }
     }
-    // --- END ANTI VIEW-ONCE ---
 
-    // --- LOG MESSAGE FOR SUMMARIZER ---
-    // Only log if it's a group and NOT a command
+    // History Logger
     if (isGroup && !messageText.startsWith(config.prefix)) {
         const senderName = msg.pushName || sender.split('@')[0];
         messageHistory.push(remoteJid, senderName, messageText);
