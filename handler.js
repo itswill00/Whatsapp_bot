@@ -43,6 +43,9 @@ export async function loadCommands() {
  */
 export async function messageHandler(sock, msg) {
     // --- AFK LOGIC LISTENER ---
+    let rawSender = msg.key.participant || msg.key.remoteJid;
+    const sender = rawSender.includes(':') ? rawSender.split(':')[0] + '@s.whatsapp.net' : rawSender;
+
     if (afkUsers.has(sender)) {
         const data = afkUsers.get(sender);
         const duration = Math.round((Date.now() - data.time) / 1000); // in seconds
