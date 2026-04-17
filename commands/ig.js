@@ -49,8 +49,9 @@ export default {
             if (!videoUrl) {
                 console.log("[IG] Apify failed or returned no items, trying fallbacks...");
                 const providers = [
-                    { name: "Widipe", url: `https://widipe.com/download/igdl?url=${encodeURIComponent(url)}`, parser: (res) => res?.data?.result?.[0]?.url || res?.data?.result?.[0] },
-                    { name: "Alya",   url: `https://api.alyaserver.my.id/api/download/igdl?url=${encodeURIComponent(url)}`, parser: (res) => res?.data?.data?.[0]?.url || res?.data?.data?.[0] },
+                    { name: "Widipe",  url: `https://widipe.com/download/igdl?url=${encodeURIComponent(url)}`, parser: (res) => res?.data?.result?.[0]?.url || res?.data?.result?.[0] },
+                    { name: "SonzaiX", url: `https://api.sonzaix.indevs.in/sosmed/instagram?url=${encodeURIComponent(url)}`, parser: (res) => res?.data?.video_url },
+                    { name: "Alya",    url: `https://api.alyaserver.my.id/api/download/igdl?url=${encodeURIComponent(url)}`, parser: (res) => res?.data?.data?.[0]?.url || res?.data?.data?.[0] },
                     { name: "Siputzx", url: `https://api.siputzx.my.id/api/d/igdl?url=${encodeURIComponent(url)}`, parser: (res) => res?.data?.data?.[0]?.url || res?.data?.data?.[0] }
                 ];
 
