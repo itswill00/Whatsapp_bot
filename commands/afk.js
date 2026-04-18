@@ -6,8 +6,10 @@ export default {
     name: "afk",
     description: "Setel status kamu menjadi Away From-Keyboard biar nggak diganggu.",
     execute: async (sock, msg, args) => {
-        const sender = decodeJid(msg.key.participant || msg.key.remoteJid);
+        const botId = decodeJid(sock.user?.id);
+        const fromMe = msg.key.fromMe;
         const isGroup = msg.key.remoteJid.endsWith('@g.us');
+        const sender = isGroup ? decodeJid(msg.key.participant || msg.key.remoteJid) : (fromMe ? botId : decodeJid(msg.key.remoteJid));
         
         // Default target is the person running the command
         let targetAfkId = sender;
@@ -16,8 +18,8 @@ export default {
             ? config.ownerNumber.map(n => decodeJid(n)).includes(sender)
             : decodeJid(config.ownerNumber) === sender;
 
-        if (!isGroup && isOwner) {
-            targetAfkId = decodeJid(sock.user?.id);
+        if (!isGroup && isOwner && fromMe) {
+            targetAfkId = botId;
         }
 
         const reason = args.length > 0 ? args.join(' ') : 'Sedang sibuk/tidak aktif';

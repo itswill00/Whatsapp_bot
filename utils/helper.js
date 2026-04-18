@@ -4,10 +4,16 @@
 export function decodeJid(jid) {
     if (!jid) return jid;
     if (typeof jid !== 'string') return jid;
+    if (jid.includes('@g.us')) return jid; // Already a group JID
+
     const cleaned = jid.includes('@') ? jid.trim().replace(/:.*@/, '@').replace(/\.0@/, '@') : jid.trim();
-    // Preserve @lid or force @s.whatsapp.net for standard numbers
-    if (cleaned.endsWith('@lid')) return cleaned;
-    return cleaned.replace('@c.us', '@s.whatsapp.net');
+    
+    // Standardize to @s.whatsapp.net for standard users
+    if (cleaned.endsWith('@c.us') || cleaned.endsWith('@s.whatsapp.net')) {
+        return cleaned.replace('@c.us', '@s.whatsapp.net');
+    }
+    
+    return cleaned;
 }
 
 /**
@@ -20,11 +26,16 @@ export function extractMessageText(msg) {
 
     // Handle ephemeral messages (Disappearing Messages)
     const msgObj = msg.message.ephemeralMessage ? msg.message.ephemeralMessage.message : msg.message;
+    // Handle viewOnce messages
+    const finalMsg = msgObj.viewOnceMessage?.message || msgObj.viewOnceMessageV2?.message || msgObj.viewOnceMessageV2Extension?.message || msgObj;
 
-    if (msgObj.conversation) return msgObj.conversation;
-    if (msgObj.extendedTextMessage?.text) return msgObj.extendedTextMessage.text;
-    if (msgObj.imageMessage?.caption) return msgObj.imageMessage.caption;
-    if (msgObj.videoMessage?.caption) return msgObj.videoMessage.caption;
+    if (finalMsg.conversation) return finalMsg.conversation;
+    if (finalMsg.extendedTextMessage?.text) return finalMsg.extendedTextMessage.text;
+    if (finalMsg.imageMessage?.caption) return finalMsg.imageMessage.caption;
+    if (finalMsg.videoMessage?.caption) return finalMsg.videoMessage.caption;
+    if (finalMsg.buttonsResponseMessage?.selectedButtonId) return finalMsg.buttonsResponseMessage.selectedButtonId;
+    if (finalMsg.listResponseMessage?.singleSelectReply?.selectedRowId) return finalMsg.listResponseMessage.singleSelectReply.selectedRowId;
+    if (finalMsg.templateButtonReplyMessage?.selectedId) return finalMsg.templateButtonReplyMessage.selectedId;
 
     return '';
 }

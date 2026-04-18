@@ -43,15 +43,31 @@ export async function loadCommands() {
  * Main message handler to be attached to connection updates
  */
 export async function messageHandler(sock, msg) {
+    const botId = decodeJid(sock.user?.id);
     const remoteJid = msg.key.remoteJid;
     const isGroup = remoteJid.endsWith('@g.us');
-    const botId = decodeJid(sock.user?.id);
+    const fromMe = msg.key.fromMe;
 
-    // AFK Listener
-    const rawSender = msg.key.participant || remoteJid;
+    // Correct sender identification
+    const rawSender = isGroup ? (msg.key.participant || remoteJid) : (fromMe ? botId : remoteJid);
     const sender = decodeJid(rawSender);
 
-    if (afkUsers.has(sender)) {
+    const messageText = extractMessageText(msg);
+    const isCommand = messageText && messageText.startsWith(config.prefix);
+    
+    // Debugging logs for PMs
+    if (!isGroup) {
+        console.log(`[PM Handler] From: ${sender} | text: "${messageText || 'none'}" | fromMe: ${fromMe} | isCommand: ${isCommand}`);
+    }
+
+    if (fromMe && !isCommand) return;
+    if (!messageText && !fromMe) {
+        if (!isGroup) console.log(`[PM Handler] Ignored: Empty message from ${sender}`);
+        return;
+    }
+
+    // AFK Detect Back
+    if (!fromMe && afkUsers.has(sender)) {
         const data = afkUsers.get(sender);
         const mins = Math.round((Date.now() - data.time) / 60000);
         afkUsers.delete(sender);
@@ -65,23 +81,16 @@ export async function messageHandler(sock, msg) {
         ? config.ownerNumber.map(n => decodeJid(n)).includes(sender)
         : decodeJid(config.ownerNumber) === sender;
 
-    if (isOwner && afkUsers.has(botId)) {
-        const data = afkUsers.get(botId);
+    if (isOwner && fromMe && afkUsers.has(botId)) {
         afkUsers.delete(botId);
         await sock.sendMessage(remoteJid, { text: "Bot kembali online." });
     }
 
-    const messageText = extractMessageText(msg);
-    const isCommand = messageText && messageText.startsWith(config.prefix);
+    const mentionedJids = (msg.message?.extendedTextMessage?.contextInfo?.mentionedJid || []).map(jid => decodeJid(jid));
+    const quotedJid = decodeJid(msg.message?.extendedTextMessage?.contextInfo?.participant);
     
-    if (msg.key.fromMe && !isCommand) return;
-    if (!messageText && !msg.key.fromMe) return;
-
-    const mentionedJids = msg.message?.extendedTextMessage?.contextInfo?.mentionedJid || [];
-    const quotedJid = msg.message?.extendedTextMessage?.contextInfo?.participant;
-    
-    const targets = mentionedJids.map(jid => decodeJid(jid));
-    if (quotedJid) targets.push(decodeJid(quotedJid));
+    const targets = [...mentionedJids];
+    if (quotedJid) targets.push(quotedJid);
 
     if (!isGroup) {
         if (!targets.includes(botId)) targets.push(botId);
@@ -90,7 +99,7 @@ export async function messageHandler(sock, msg) {
     }
 
     for (const target of targets) {
-        if (afkUsers.has(target)) {
+        if (target && afkUsers.has(target) && target !== sender) {
             const data = afkUsers.get(target);
             await sock.sendMessage(remoteJid, {
                 text: `@${target.split('@')[0]} sedang AFK — _${data.reason}_`,
